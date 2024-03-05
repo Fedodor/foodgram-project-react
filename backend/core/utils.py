@@ -25,9 +25,9 @@ def post(model, user, pk):
             )
     except Recipe.DoesNotExist:
         return Response(
-                {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     recipe = get_object_or_404(Recipe, id=pk)
     model.objects.create(user=user, recipe=recipe)
     serializer = RecipeMiniSerializer(recipe)
@@ -46,9 +46,9 @@ def delete(model, user, pk):
         obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     return Response(
-            {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 def create_list_of_shopping_cart(user, request):

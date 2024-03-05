@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
         with open(
             'recipes/data/ingredients.csv', 'r', encoding='utf-8'
-                ) as csvfile:
+        ) as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
                 Ingredient.objects.get_or_create(
