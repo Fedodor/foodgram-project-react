@@ -76,7 +76,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            sudo docker compose down
+            sudo docker-compose down
             sudo docker image prune --force
             sudo docker container prune --force
             sudo docker system prune --force
@@ -84,8 +84,9 @@ jobs:
             sudo docker pull fedodor/foodgram_frontend:latest
             sudo docker pull fedodor/foodgram_backend:latest
 
-            sudo docker compose stop
-            sudo docker compose up -d
+            sudo docker-compose stop
+            sudo docker-compose rm backend
+            sudo docker-compose up -d
 
             sudo docker compose exec -T backend python manage.py makemigrations users
             sudo docker compose exec -T backend python manage.py makemigrations recipes
