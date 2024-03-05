@@ -5,36 +5,22 @@ on:
     branches: [ master ]
 
 jobs:
-  copy_files_to_server:
-    name: Copy infra and docs
+  tests:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Create projects directory
-      uses: garygrossgarten/github-action-ssh@release
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        privateKey: ${{ secrets.SSH_PASSPHRASE }}
-        command: mkdir -p foodgram/docs
+      - uses: actions/checkout@v3
+      - name: Set up Python
 
-    - name: Copy infra files
-      uses: garygrossgarten/github-action-scp@release
-      with:
-          local: infra/
-          remote: /${{ secrets.USERNAME }}/foodgram/
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          privateKey: ${{ secrets.SSH_PASSPHRASE }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
 
-    - name: Copy docs
-      uses: garygrossgarten/github-action-scp@release
-      with:
-          local: docs
-          remote: /${{ secrets.USERNAME }}/foodgram/docs/
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          privateKey: ${{ secrets.SSH_PASSPHRASE }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pep8-naming flake8-broken-line
+          pip install -r backend/requirements.txt
   
   build_backend_and_push_to_docker_hub:
     name: Push Docker image to DockerHub
