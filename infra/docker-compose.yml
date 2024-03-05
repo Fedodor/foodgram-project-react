@@ -12,6 +12,8 @@ services:
   db:
     container_name: foodgram-db
     image: postgres:13.0-alpine
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD: trust
     restart: always
     ports:
       - '5432:5432'
@@ -40,8 +42,8 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
-      - static:/etc/nginx/html/static/
-      - media:/etc/nginx/html/media/
+      - static:/var/html/static/
+      - media:/var/html/media/
     depends_on:
       - backend
       - frontend
