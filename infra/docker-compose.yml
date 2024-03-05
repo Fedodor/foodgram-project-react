@@ -13,7 +13,7 @@ services:
     container_name: foodgram-db
     image: postgres:13.0-alpine
     environment:
-      - POSTGRES_HOST_AUTH_METHOD: trust
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
     restart: always
     ports:
       - '5432:5432'
