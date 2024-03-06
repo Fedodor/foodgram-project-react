@@ -20,13 +20,11 @@ class Tag(models.Model):
         verbose_name='Цвет',
         format='hex',
         unique=True,
-        max_length=7,
-        db_index=False,
+        max_length=Length.MAX_LENGHT_COLOR_FIELD.value,
     )
     slug = models.SlugField(
         verbose_name='Слаг',
         max_length=Length.MAX_LEN_RECIPES_CHARFIELD.value,
-        db_index=False,
     )
 
     class Meta:
@@ -67,7 +65,6 @@ class Recipe(models.Model):
     )
     text = models.TextField(
         verbose_name='Описание',
-        max_length=Length.MAX_LEN_TEXTFIELD.value,
     )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления (в минутах)',
@@ -129,7 +126,7 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
-        default=0,
+        default=1,
         validators=[
             MinValueValidator(
                 Length.MIN_AMOUNT_OF_INGREDIENTS.value,
@@ -171,6 +168,7 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранные рецепты'
         verbose_name_plural = 'Избранные рецепты'
+        ordering = ('recipe',)
         constraints = [models.UniqueConstraint(
             fields=('recipe', 'user'),
             name='unique_recipe')
@@ -197,6 +195,7 @@ class ShoppingCart(models.Model):
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
         default_related_name = 'shopping_cart'
+        ordering = ('recipe',)
         constraints = [models.UniqueConstraint(
             fields=('recipe', 'user'),
             name='unique_shopping_cart')

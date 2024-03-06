@@ -9,6 +9,7 @@ from core.enums import Length
 
 class CustomUser(AbstractUser):
     """Модель пользователя."""
+
     ADMIN = 'admin'
     USER = 'user'
     USER_ROLES = [
@@ -18,7 +19,7 @@ class CustomUser(AbstractUser):
     username = models.CharField(
         verbose_name='Псевдоним',
         default='username',
-        max_length=149,
+        max_length=Length.MAX_LENGTH_USERNAME.value,
         blank=False,
         unique=True,
         validators=(
@@ -58,6 +59,13 @@ class CustomUser(AbstractUser):
         default=USER
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = (
+        'username',
+        'first_name',
+        'last_name'
+    )
+
     class Meta:
         ordering = ('username',)
         verbose_name = 'Пользователь'
@@ -88,7 +96,7 @@ class Subscription(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        ordering = ('id',)
+        ordering = ('user',)
         constraints = [models.UniqueConstraint(
             fields=('user', 'author'),
             name='unique_subscriber')

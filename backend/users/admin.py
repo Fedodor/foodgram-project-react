@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
 from .models import (
     CustomUser, Subscription
@@ -6,7 +7,7 @@ from .models import (
 
 
 @admin.register(CustomUser)
-class CustomUserAdmin(admin.ModelAdmin):
+class UserAdmin(UserAdmin):
     pass
 
 

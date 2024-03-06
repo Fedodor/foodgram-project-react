@@ -13,10 +13,7 @@ RESPONSE_RECIPE_POST_ERROR_MESSAGE = 'Ошибка. Рецепт уже был �
 RESPONSE_RECIPE_DELETE_ERROR_MESSAGE = 'Ошибка. Рецепт уже был удалён.'
 
 
-def post(model, user, pk):
-    if model.objects.filter(user=user, recipe__id=pk).exists():
-        return Response({'errors': RESPONSE_RECIPE_POST_ERROR_MESSAGE},
-                        status=status.HTTP_400_BAD_REQUEST)
+def post(request, user, pk, model_serializer):
     try:
         if not Recipe.objects.get(id=pk):
             return Response(
@@ -28,10 +25,16 @@ def post(model, user, pk):
             {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
             status=status.HTTP_400_BAD_REQUEST
         )
-    recipe = get_object_or_404(Recipe, id=pk)
-    model.objects.create(user=user, recipe=recipe)
-    serializer = RecipeMiniSerializer(recipe)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    serializer = model_serializer(
+        data={'recipe': pk},
+        context={'request': request}
+    )
+    serializer.is_valid(raise_exception=True)
+    model_data = RecipeMiniSerializer(
+        serializer.save(user=user).recipe,
+        context={'request': request}
+    ).data
+    return Response(data=model_data, status=status.HTTP_201_CREATED)
 
 
 def delete(model, user, pk):

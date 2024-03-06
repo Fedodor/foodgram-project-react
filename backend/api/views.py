@@ -3,19 +3,19 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 from rest_framework.response import Response
-# from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
-from rest_framework import status
 
 from .filters import IngredientFilter, RecipeFilter
-from .paginations import CustomPagination
-from .permissions import IsAuthorOrAdminOrReadOnly
+from .paginations import FoodgramPagination
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     CustomUserSerializer, CustomUserCreateSerializer,
-    IngredientSerializer, TagSerializer, SubcriptionSerializer,
+    FavoriteSerializer, IngredientSerializer,
+    TagSerializer, SubcriptionSerializer, ShoppingCartSerializer,
     SubscriptionCreateSerializer, RecipePostSerializer,
     RecipeGetSerializer
 )
@@ -27,7 +27,7 @@ from users.models import CustomUser, Subscription
 class CustomUserViewSet(UserViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    pagination_class = CustomPagination
+    pagination_class = FoodgramPagination
 
     @action(
         detail=True,
@@ -49,12 +49,11 @@ class CustomUserViewSet(UserViewSet):
                 subscription,
                 context={'request': request}).data,
                 status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            serializer.is_valid(raise_exception=True)
-            subscription = Subscription.objects.get(
-                user=user, author=author)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer.is_valid(raise_exception=True)
+        subscription = Subscription.objects.get(
+            user=user, author=author)
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
@@ -117,12 +116,13 @@ class CustomUserViewSet(UserViewSet):
             if self.request.user.check_password(current_password):
                 self.request.user.set_password(new_password)
                 self.request.user.save()
-                return Response(status=204)
-            else:
-                return Response({'detail': 'Пароли не совпадают.'},
-                                status=400)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response({'detail': 'Пароли не совпадают.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=400)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -143,14 +143,11 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.select_related('author')
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    permission_classes = IsAuthorOrAdminOrReadOnly,
-    pagination_class = CustomPagination
+    permission_classes = IsAuthorOrReadOnly,
+    pagination_class = FoodgramPagination
 
     def get_queryset(self):
         queryset = self.queryset
-        tags = self.request.query_params.getlist('tags', [])
-        if tags:
-            queryset = queryset.filter(tags__slug__in=tags).distinct()
         author_id = self.request.query_params.get('author', None)
         if author_id is not None:
             queryset = queryset.filter(author_id=author_id)
@@ -173,9 +170,8 @@ class RecipeViewSet(ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         if request.method == 'POST':
-            return post(ShoppingCart, request.user, pk)
-        if request.method == 'DELETE':
-            return delete(ShoppingCart, request.user, pk)
+            return post(request, pk, ShoppingCartSerializer)
+        return delete(ShoppingCart, request, pk, ShoppingCartSerializer)
 
     @action(
         detail=True,
@@ -184,9 +180,8 @@ class RecipeViewSet(ModelViewSet):
     )
     def favorite(self, request, pk=None):
         if request.method == 'POST':
-            return post(Favorite, request.user, pk)
-        if request.method == 'DELETE':
-            return delete(Favorite, request.user, pk)
+            return post(request, pk, FavoriteSerializer)
+        return delete(Favorite, request, pk, FavoriteSerializer)
 
     @action(
         detail=False,
