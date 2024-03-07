@@ -7,7 +7,7 @@ from api.validators import validate_username
 from core.enums import Length
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     """Модель пользователя."""
 
     ADMIN = 'admin'
@@ -34,23 +34,19 @@ class CustomUser(AbstractUser):
         verbose_name='Пароль',
         max_length=Length.MAX_LENGTH_PASSWORD.value,
         default='secret',
-        blank=False
     )
     email = models.EmailField(
         'Почта',
         unique=True,
         default='some@example.com',
-        blank=False
     )
     first_name = models.CharField(
         verbose_name='Имя',
         max_length=Length.MAX_LENGTH_FIRST_NAME.value,
-        blank=False
     )
     last_name = models.CharField(
         verbose_name='Фамилия',
         max_length=Length.MAX_LENGTH_LAST_NAME.value,
-        blank=False
     )
     role = models.CharField(
         verbose_name='Права доступа',
@@ -81,13 +77,13 @@ class CustomUser(AbstractUser):
 class Subscription(models.Model):
 
     user = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name='Подписчик',
         related_name='subscriber',
         on_delete=models.CASCADE,
     )
     author = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name='Автор рецепта',
         related_name='subscription',
         on_delete=models.CASCADE,

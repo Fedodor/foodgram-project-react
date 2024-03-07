@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from django.db.models import Sum
-from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -13,14 +12,8 @@ RESPONSE_RECIPE_POST_ERROR_MESSAGE = 'Ошибка. Рецепт уже был �
 RESPONSE_RECIPE_DELETE_ERROR_MESSAGE = 'Ошибка. Рецепт уже был удалён.'
 
 
-def post(request, user, pk, model_serializer):
-    try:
-        if not Recipe.objects.get(id=pk):
-            return Response(
-                {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    except Recipe.DoesNotExist:
+def post(request, pk, model_serializer):
+    if not Recipe.objects.filter(id=pk).exists():
         return Response(
             {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
             status=status.HTTP_400_BAD_REQUEST
@@ -31,27 +24,22 @@ def post(request, user, pk, model_serializer):
     )
     serializer.is_valid(raise_exception=True)
     model_data = RecipeMiniSerializer(
-        serializer.save(user=user).recipe,
+        serializer.save(user=request.user).recipe,
         context={'request': request}
     ).data
     return Response(data=model_data, status=status.HTTP_201_CREATED)
 
 
-def delete(model, user, pk):
-    obj = model.objects.filter(user=user, recipe__id=pk)
-    recipe = get_object_or_404(Recipe, id=pk)
-    if not recipe:
-        return Response(
-            {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
-            status=status.HTTP_404_NOT_FOUND
-        )
-    if obj.exists():
-        obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    return Response(
-        {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
-        status=status.HTTP_400_BAD_REQUEST
+def delete(model, request, pk, model_serializer):
+    serializer = model_serializer(
+        data={'recipe': pk},
+        context={'request': request}
     )
+    serializer.is_valid(raise_exception=True)
+    model.objects.get(
+        user=request.user, recipe=serializer.validated_data['recipe']
+    ).delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 def create_list_of_shopping_cart(user, request):
