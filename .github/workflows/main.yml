@@ -68,32 +68,46 @@ jobs:
       - build_backend_and_push_to_docker_hub
       - build_frontend_and_push_to_docker_hub
     steps:
-      - name: executing remote ssh command to deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          script: |
-            cd foodgram/
-            sudo docker-compose down
-            sudo docker image prune --force
-            sudo docker container prune --force
-            sudo docker system prune --force
-
-            sudo docker pull fedodor/foodgram_frontend:latest
-            sudo docker pull fedodor/foodgram_backend:latest
-
-            sudo docker-compose stop
-            sudo docker-compose rm backend
-            sudo docker-compose up -d
-
-            sudo docker compose exec -T backend python manage.py makemigrations users
-            sudo docker compose exec -T backend python manage.py makemigrations recipes
-            sudo docker compose exec -T backend python manage.py migrate
-            sudo docker compose exec -T backend python manage.py collectstatic --no-input
-            sudo docker compose exec -T backend python manage.py load_ingredients_from_csv
+    - name: Checkout repo
+      uses: actions/checkout@v3
+    - name: Copy docker-compose.production.yml via ssh
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        source: "infra/docker-compose.production.yml"
+        target: "foodgram"
+    - name: Copy nginx.production.yml via ssh
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        source: "infra/nginx.conf"
+        target: "foodgram"
+    - name: Executing remote ssh commands to deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        debug: true
+        script: |
+          cd foodgram/infra
+          sudo docker compose -f docker-compose.production.yml -v down
+          sudo docker rm -f foodgram_backend foodgram_frontend foodgram_db foodgram_nginx || true
+          sudo docker compose -f docker-compose.production.yml up -d --build
+        port: 22
+        sync: false
+        use_insecure_cipher: false
+        command_timeout: 10m
+        proxy_port: 22
+        proxy_use_insecure_cipher: false
+        script_stop: false
   send_message:
     runs-on: ubuntu-latest
     needs: deploy
