@@ -4,7 +4,6 @@ from django.db.models import Sum
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.serializers import RecipeMiniSerializer
 from recipes.models import Recipe, RecipeIngredient
 
 
@@ -23,11 +22,8 @@ def post(request, pk, model_serializer):
         context={'request': request}
     )
     serializer.is_valid(raise_exception=True)
-    model_data = RecipeMiniSerializer(
-        serializer.save(user=request.user).recipe,
-        context={'request': request}
-    ).data
-    return Response(data=model_data, status=status.HTTP_201_CREATED)
+    serializer.save(user=request.user)
+    return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
 def delete(model, request, pk, model_serializer):

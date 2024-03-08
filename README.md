@@ -141,3 +141,5 @@ Foodgram — это сайт, где авторизованные пользов
 ### Автор:
 
 [Fedodor](https://github.com/Fedodor)
+
+(https://github.com/Fedodor/foodgram-project-react/actions/workflows/main.yml/badge.svg)

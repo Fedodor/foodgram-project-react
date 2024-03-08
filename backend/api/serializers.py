@@ -135,7 +135,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
                 raise exceptions.ValidationError(
                     RE_SUBSCRIPTION_VALIDATION_ERROR
                 )
-        elif self.context['request'].method == 'DELETE':
+        if self.context['request'].method == 'DELETE':
             try:
                 Subscription.objects.get(user=user, author=author)
             except Subscription.DoesNotExist:
@@ -336,11 +336,17 @@ class FavoriteSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Рецепт уже в избранном'
             )
-        elif self.context['request'].method == 'DELETE' and not favorite:
+        if self.context['request'].method == 'DELETE' and not favorite:
             raise serializers.ValidationError(
                 'Ошибка. Рецепт уже был удалён.'
             )
         return data
+
+    def to_representation(self, instance):
+        serializer = RecipeMiniSerializer(
+            instance, context={"request": self.context.get("request")}
+        )
+        return serializer.data
 
 
 class ShoppingCartSerializer(serializers.Serializer):
@@ -363,8 +369,14 @@ class ShoppingCartSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Рецепт уже в корзине'
             )
-        elif self.context['request'].method == 'DELETE' and not shopping_cart:
+        if self.context['request'].method == 'DELETE' and not shopping_cart:
             raise serializers.ValidationError(
                 'Ошибка. Рецепт уже был удалён.'
             )
         return data
+
+    def to_representation(self, instance):
+        serializer = RecipeMiniSerializer(
+            instance, context={"request": self.context.get("request")}
+        )
+        return serializer.data

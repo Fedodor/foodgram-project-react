@@ -107,16 +107,15 @@ class UsersViewSet(UserViewSet):
             context={'request': request}
         )
 
-        if serializer.is_valid(raise_exception=True):
-            current_password = serializer.validated_data['current_password']
-            new_password = serializer.validated_data['new_password']
-
-            if self.request.user.check_password(current_password):
-                self.request.user.set_password(new_password)
-                self.request.user.save()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({'detail': 'Пароли не совпадают.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        current_password = serializer.validated_data['current_password']
+        new_password = serializer.validated_data['new_password']
+        if self.request.user.check_password(current_password):
+            self.request.user.set_password(new_password)
+            self.request.user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'detail': 'Пароли не совпадают.'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
