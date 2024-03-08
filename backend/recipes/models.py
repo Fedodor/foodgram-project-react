@@ -1,9 +1,12 @@
 from colorfield.fields import ColorField
+from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from core.enums import Length
 from users.models import User
+
+Users = get_user_model()
 
 
 class Tag(models.Model):
@@ -88,7 +91,7 @@ class Recipe(models.Model):
         verbose_name='Список тегов',
     )
     author = models.ForeignKey(
-        User,
+        Users,
         on_delete=models.SET_NULL,
         null=True,
     )
@@ -114,11 +117,13 @@ class RecipeIngredient(models.Model):
         Recipe,
         related_name='ingredients_recipe',
         on_delete=models.CASCADE,
+        default=None,
     )
     ingredients = models.ForeignKey(
         Ingredient,
         related_name='ingredients_recipe',
         on_delete=models.CASCADE,
+        default=None,
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
@@ -153,12 +158,14 @@ class Favorite(models.Model):
         verbose_name='Избранные рецепты',
         on_delete=models.CASCADE,
         related_name='favorites_recipe',
+        default=None,
     )
     user = models.ForeignKey(
         User,
         verbose_name='Пользователь',
         on_delete=models.CASCADE,
-        related_name='favorites_user'
+        related_name='favorites_user',
+        default='User'
     )
 
     class Meta:
@@ -180,11 +187,13 @@ class ShoppingCart(models.Model):
         Recipe,
         verbose_name='Рецепты в корзине',
         on_delete=models.CASCADE,
+        default=None,
     )
     user = models.ForeignKey(
         User,
         verbose_name='Владелец списка покупок',
         on_delete=models.CASCADE,
+        default='User'
     )
 
     class Meta:

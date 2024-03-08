@@ -170,7 +170,9 @@ Foodgram — это сайт, где авторизованные пользов
    }
    ```
 
-### Автор:
+### Автор и проект:
+
+https://foodgramya.ddns.net/
 
 [Fedodor](https://github.com/Fedodor)
 
