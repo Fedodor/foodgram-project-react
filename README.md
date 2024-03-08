@@ -12,7 +12,7 @@ Foodgram — это сайт, где авторизованные пользов
 - Postgres 13.0
 - Djoser 2.1.0
 
-### Установка:
+### Установка локально:
 
     1. Клонировать репозиторий и перейти в него в командной строке:
 
@@ -45,6 +45,38 @@ Foodgram — это сайт, где авторизованные пользов
     6. Запустите сервер:
 
     ``` python manage.py runserver ```
+  
+## Запуск приложения в контейнере на сервере
+1. На сервере создайте директорию для приложения:
+    ```bash
+    mkdir foodgram/infra
+    ```
+2. В папку _infra_ скопируйте файлы `docker-compose.production.yml`, `nginx.conf`.
+3. Там же создайте файл `.env` со следующими переменными:
+   ```
+   SECRET_KEY=
+   ALLOWED_HOSTS=
+   ENGINE=django.db.backends.postgresqlpostgresql
+   DB_NAME=
+   POSTGRES_USER=
+   POSTGRES_PASSWORD=
+   POSTGRES_DB=
+   DB_PORT=5432
+   ```
+4. В соответствии с `ALLOWED_HOSTS` измените `nginx.conf`.
+5. Теперь соберем и запустим контейнер:
+   ```bash
+   sudo docker compose up --build
+   ```
+6. В новом окне терминала создадим супер пользователя:
+   ```bash
+   docker compose exec backend python manage.py createsuperuser
+   ```
+
+## Инфраструктура проекта
+**API** - https://localhost/api/ \
+**Redoc** - https://localhost/api/docs/ \
+**Админка** -https://localhost/admin/
 
 ### Примеры нескольких запросов и ответов к API:
 
