@@ -66,7 +66,7 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DB', default='django_foodgram'),
         'USER': os.getenv('POSTGRES_USER', default='postgres'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='SWAD123zxc'),
-        'HOST': os.getenv('DB_HOST', 'db'),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
         'PORT': os.getenv('DB_PORT', default='5432')
     }
 }
