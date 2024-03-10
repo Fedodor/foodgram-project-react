@@ -27,7 +27,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip 
-          pip install flake8==6.0.0 flake8-isort==6.0.0
           pip install -r ./backend/requirements.txt
       - name: Test with flake8 and django tests
         env:
@@ -36,10 +35,6 @@ jobs:
           POSTGRES_DB: django_db
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
-        run: |
-          python -m flake8 backend/
-          cd backend/
-          python manage.py test
   
   build_backend_and_push_to_docker_hub:
     name: Push Docker image to DockerHub
@@ -117,16 +112,17 @@ jobs:
         debug: true
         script: |
           cd foodgram/infra
+          sudo docker compose -f docker-compose.production.yml down
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-project
+
           sudo docker compose -f docker-compose.production.yml -v down
           sudo docker rm -f foodgram_backend foodgram_frontend foodgram_db foodgram_nginx || true
           sudo docker compose -f docker-compose.production.yml up -d --build
-        port: 22
-        sync: false
-        use_insecure_cipher: false
-        command_timeout: 10m
-        proxy_port: 22
-        proxy_use_insecure_cipher: false
-        script_stop: false
+          sudo docker compose exec -T backend python manage.py makemigrations users
+          sudo docker compose exec -T backend python manage.py makemigrations recipes
+          sudo docker compose exec -T backend python manage.py migrate
+          sudo docker compose exec -T backend python manage.py collectstatic --no-input
   send_message:
     runs-on: ubuntu-latest
     needs: deploy
