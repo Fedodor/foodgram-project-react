@@ -40,7 +40,6 @@ services:
       - ../docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
       - static_volume:/var/html/static/
       - media_volume:/var/html/media/
-      - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
       - backend
       - frontend
