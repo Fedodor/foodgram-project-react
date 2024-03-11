@@ -26,6 +26,8 @@ services:
     image: fedodor/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
+    depends_on:
+      - db
     restart: on-failure
 
   nginx:
@@ -41,6 +43,7 @@ services:
       - static_volume:/var/html/static/
       - media_volume:/var/html/media/
     depends_on:
+      - db
       - backend
       - frontend
     restart: always

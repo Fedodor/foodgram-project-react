@@ -1,6 +1,13 @@
 version: '3.3'
 services:
 
+  db:
+  container_name: foodgram_db
+  image: postgres:13
+  env_file: .env
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+
   frontend:
     container_name: foodgram_frontend
     build:
@@ -10,19 +17,12 @@ services:
     volumes:
       - static:/frontend_static
 
-  db:
-    container_name: foodgram_db
-    image: postgres:13
-    env_file: .env
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   backend:
     container_name: foodgram_backend
     build: ./backend
     restart: always
     volumes:
-      - static:/app/static
+      - static:/app/static.
       - media:/app/media/
     env_file:
       - ./.env
