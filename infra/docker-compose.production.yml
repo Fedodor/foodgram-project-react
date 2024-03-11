@@ -24,7 +24,7 @@ services:
     container_name: foodgram_frontend
     image: fedodor/foodgram_frontend:latest
     volumes:
-      - static_volume_food:/frontend_static/app/build/
+      - static_volume:/frontend_static/app/build/
     depends_on:
       - db
     restart: on-failure
