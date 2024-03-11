@@ -11,7 +11,7 @@ services:
       - static:/frontend_static
 
   db:
-    container_name: foodgram-db
+    container_name: foodgram_db
     image: postgres:13
     env_file: .env
     volumes:
