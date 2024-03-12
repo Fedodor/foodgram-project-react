@@ -7,8 +7,6 @@ services:
     env_file: .env
     volumes:
       - pg_data_production:/var/lib/postgresql/data/
-    ports:
-      - 5432
     restart: always
 
   backend:
