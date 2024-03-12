@@ -69,7 +69,7 @@ jobs:
           push: true
           tags: fedodor/foodgram_frontend:latest
 
-build_nginx_and_push_to_docker_hub:
+  build_nginx_and_push_to_docker_hub:
     name: Push Nginx Docker image to DockerHub
     runs-on: ubuntu-latest
     steps:
