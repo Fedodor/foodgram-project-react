@@ -67,6 +67,9 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
+    def is_user(self):
+        return self.role == self.USER
+
     def is_admin(self):
         return self.role == self.ADMIN or self.is_superuser
 
