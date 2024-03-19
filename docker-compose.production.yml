@@ -4,7 +4,10 @@ services:
 
   db:
     image: postgres:13.10
-    env_file: .env
+    environment:
+      - POSTGRES_PASSWORD=SWAD123zxc
+      - POSTGRES_USER=django_user
+      - POSTGRES_DB=django_db
     volumes:
       - pg_data:/var/lib/postgresql/data/
     restart: always
