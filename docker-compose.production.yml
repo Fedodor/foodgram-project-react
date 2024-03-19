@@ -10,6 +10,8 @@ services:
       - POSTGRES_DB=django_db
     volumes:
       - pg_data:/var/lib/postgresql/data/
+    networks:
+      - djangonetwork
     restart: always
 
   backend:
@@ -19,9 +21,11 @@ services:
       - static:/backend_static
       - media:/app/media
     links:
-      - "db:database"
+      - db:db
     depends_on:
       - db
+    networks:
+      - djangonetwork
     restart: always
 
   frontend:
@@ -54,3 +58,7 @@ volumes:
   pg_data:
   static:
   media:
+
+networks:
+      djangonetwork:
+          driver: bridge
