@@ -11,7 +11,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data/
     networks:
-      - network_name: foodgram_net
+      - foodgram_net
     restart: always
 
   backend:
@@ -21,7 +21,7 @@ services:
       - static:/backend_static
       - media:/app/media
     networks:
-      - network_name: foodgram_net
+      - foodgram_net
     depends_on:
       - db
     restart: always
@@ -33,7 +33,7 @@ services:
       - static:/frontend_static
     command: cp -r /app/build/. /frontend_static/
     networks:
-      - network_name: foodgram_net
+      - foodgram_net
     depends_on:
       - db
     restart: always
@@ -42,7 +42,7 @@ services:
     image: fedodor/foodgram_nginx
     env_file: .env
     networks:
-      - network_name: foodgram_net
+      - foodgram_net
     ports:
       - 7000:80
     volumes:
