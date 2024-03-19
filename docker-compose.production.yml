@@ -18,6 +18,8 @@ services:
     volumes:
       - static:/backend_static
       - media:/app/media
+    links:
+      - "db:database"
     depends_on:
       - db
     restart: always
