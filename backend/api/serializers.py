@@ -289,7 +289,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         _ = self.context.get('request').user
-        ingredients_data = validated_data.pop('ingredients')
+        ingredients_data = validated_data.pop('ingredients_recipe')
         instance = super().create(validated_data)
         instance.tags.set(tags)
         self.create_ingredients_amounts(
@@ -302,7 +302,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image)
         tags_data = validated_data.pop('tags')
         instance.tags.set(tags_data)
-        ingredients_data = validated_data.pop('ingredients')
+        ingredients_data = validated_data.pop('ingredients_recipe')
         recipe_ingredients = instance.ingredients_recipe.all()
         recipe_ingredients.delete()
         self.create_ingredients_amounts(
