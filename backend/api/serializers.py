@@ -287,15 +287,13 @@ class RecipePostSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        _ = self.context.get('request').user
         ingredients_data = validated_data.pop('ingredients_recipe')
-        instance = super().create(validated_data)
-        instance.tags.set(tags)
-        self.create_ingredients_amounts(
-            recipe=instance, ingredients_data=ingredients_data
-        )
-        return instance
+        tags_data = validated_data.pop('tags')
+        validated_data['author'] = self.context['request'].user
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags_data)
+        self.create_ingredients_amounts(ingredients_data, recipe)
+        return recipe
 
     def update(self, instance, validated_data):
         instance.image.delete()
