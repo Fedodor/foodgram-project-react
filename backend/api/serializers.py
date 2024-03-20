@@ -276,11 +276,11 @@ class RecipePostSerializer(serializers.ModelSerializer):
         recipe_ingredients = []
         for ingredient_data in ingredients_data:
             ingredient_id = ingredient_data['id']
-            ingredient = Ingredient.objects.get(id=ingredient_id)
+            # ingredient = Ingredient.objects.get(id=ingredient_id)
             recipe_ingredients.append(
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredients=ingredient,
+                    ingredients=ingredient_id,
                     amount=ingredient_data['amount']
                 )
             )
