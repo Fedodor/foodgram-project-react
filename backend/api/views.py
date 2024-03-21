@@ -34,20 +34,23 @@ class UsersViewSet(UserViewSet):
         methods=('POST', 'DELETE'),
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, id):
+    def subscribe(self, request, user_id):
         author = get_object_or_404(
-            User, id=id
+            User, pk=user_id
         )
+        author.save()
         user = request.user
         serializer = SubscriptionCreateSerializer(
-            data={'author': author.id},
+            data={
+                'author': author.id,
+                'user': user.id
+            },
             context={'request': request})
         if request.method == 'POST':
             serializer.is_valid(raise_exception=True)
             subscription = serializer.save(user=user)
-            return Response(SubcriptionSerializer(
-                subscription,
-                context={'request': request}).data,
+            return Response(
+                serializer.data,
                 status=status.HTTP_201_CREATED)
         serializer.is_valid(raise_exception=True)
         subscription = Subscription.objects.get(
