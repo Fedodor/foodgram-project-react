@@ -276,18 +276,17 @@ class RecipePostSerializer(serializers.ModelSerializer):
         recipe_ingredients = []
         for ingredient_data in ingredients_data:
             ingredient_id = ingredient_data['id']
-            # ingredient = Ingredient.objects.get(id=ingredient_id)
             recipe_ingredients.append(
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredients=ingredient_id,
+                    ingredients_id=ingredient_id,
                     amount=ingredient_data['amount']
                 )
             )
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
-        ingredients_data = validated_data.pop('ingredients_recipe')
+        ingredients_data = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         validated_data['author'] = self.context['request'].user
         instance = super().create(validated_data)
@@ -300,7 +299,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image)
         tags_data = validated_data.pop('tags')
         instance.tags.set(tags_data)
-        ingredients_data = validated_data.pop('ingredients_recipe')
+        ingredients_data = validated_data.pop('ingredients')
         recipe_ingredients = instance.ingredients_recipe.all()
         recipe_ingredients.delete()
         self.create_ingredients_amounts(
@@ -314,7 +313,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return RecipeGetSerializer(instance, context=context).data
 
 
-class FavoriteSerializer(serializers.Serializer):
+class FavoriteSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     recipe = serializers.PrimaryKeyRelatedField(
         queryset=Recipe.objects.all()
@@ -347,7 +346,7 @@ class FavoriteSerializer(serializers.Serializer):
         return serializer.data
 
 
-class ShoppingCartSerializer(serializers.Serializer):
+class ShoppingCartSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     recipe = serializers.PrimaryKeyRelatedField(
         queryset=Recipe.objects.all()
