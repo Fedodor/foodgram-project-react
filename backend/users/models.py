@@ -79,16 +79,16 @@ class User(AbstractUser):
 
 class Subscription(models.Model):
 
-    user = models.ForeignKey(
+    subscribed_to = models.ForeignKey(
         User,
         verbose_name='Подписчик',
-        related_name='subscriber',
+        related_name='subscribed_to',
         on_delete=models.CASCADE,
     )
-    author = models.ForeignKey(
+    subscriber = models.ForeignKey(
         User,
         verbose_name='Автор рецепта',
-        related_name='subscription',
+        related_name='subscriber',
         on_delete=models.CASCADE,
     )
 
@@ -96,9 +96,11 @@ class Subscription(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         ordering = ('user',)
-        constraints = [models.UniqueConstraint(
-            fields=('user', 'author'),
-            name='unique_subscriber')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['subscriber', 'subscribed_to'],
+                name='unique_subscribed_to'
+            )
         ]
 
     def __str__(self):

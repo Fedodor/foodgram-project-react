@@ -112,32 +112,32 @@ class SubcriptionSerializer(UserGetSerializer):
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
-    author = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all()
-    )
+    # user = serializers.PrimaryKeyRelatedField(read_only=True)
+    # author = serializers.PrimaryKeyRelatedField(
+        # queryset=User.objects.all()
+    # )
 
     class Meta:
         model = Subscription
-        fields = ('user', 'author')
+        fields = ('subscribed_to', 'subscriber')
 
     def validate(self, data):
         user = self.context['request'].user
-        author = data['author']
+        author = data['subscribed_to']
         if self.context['request'].method == 'POST':
             if user == author:
                 raise exceptions.ValidationError(
                     ME_SUBSCRIPTION_VALIDATION_ERROR
                 )
             if Subscription.objects.filter(
-                user=user, author=author
+                subscriber=user, subscribed_to=author
             ).exists():
                 raise exceptions.ValidationError(
                     RE_SUBSCRIPTION_VALIDATION_ERROR
                 )
         if self.context['request'].method == 'DELETE':
             try:
-                Subscription.objects.get(user=user, author=author)
+                Subscription.objects.get(subscriber=user, subscribed_to=author)
             except Subscription.DoesNotExist:
                 raise serializers.ValidationError(
                     SUBSCRIPTION_NOT_FOUND_ERROR
