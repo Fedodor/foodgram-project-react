@@ -5,7 +5,10 @@ from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import (
+    IsAuthenticated, IsAuthenticatedOrReadOnly, SAFE_METHODS
+)
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 
@@ -28,50 +31,6 @@ class UsersViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserGetSerializer
     pagination_class = FoodgramPagination
-
-    @action(
-        detail=True,
-        methods=('POST', 'DELETE'),
-        permission_classes=(IsAuthenticated,)
-    )
-    def subscribe(self, request, user_id):
-        author = get_object_or_404(
-            User, pk=user_id
-        )
-        author.save()
-        user = request.user
-        serializer = SubscriptionCreateSerializer(
-            data={
-                'subscription': author.id,
-                'subscriber': user.id
-            },
-            context={'request': request})
-        if request.method == 'POST':
-            serializer.is_valid(raise_exception=True)
-            subscription = serializer.save(user=user)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED)
-        serializer.is_valid(raise_exception=True)
-        subscription = Subscription.objects.filter(
-            user=user, author=author)
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(
-        detail=False,
-        permission_classes=(IsAuthenticated,)
-    )
-    def subscriptions(self, request):
-        queryset = Subscription.objects.filter(
-            user=request.user).order_by('-id')
-        page = self.paginate_queryset(queryset)
-        serializer = SubcriptionSerializer(
-            page,
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -119,6 +78,56 @@ class UsersViewSet(UserViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({'detail': 'Пароли не совпадают.'},
                         status=status.HTTP_400_BAD_REQUEST)
+
+
+class SubscriptionListView(ListAPIView):
+    serializer_class = SubcriptionSerializer
+    pagination_class = FoodgramPagination
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        current_user = self.request.user
+        queryset = User.objects.filter(subscribed_to__subscriber=current_user)
+
+        return queryset
+
+
+class SubscriptionView(ListAPIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = SubcriptionSerializer
+
+    def post(self, request, user_id):
+        subscribed_to = get_object_or_404(User, pk=user_id)
+        subscribed_to.save()
+        subscriber = request.user
+
+        serializer_create = SubscriptionCreateSerializer(
+            data={
+                'subscribed_to': subscribed_to.id,
+                'subscriber': subscriber.id,
+            },
+            context={'request': request}
+        )
+        serializer_create.is_valid(raise_exception=True)
+        serializer_create.save()
+        return Response(
+            serializer_create.data, status=status.HTTP_201_CREATED
+        )
+
+    def delete(self, request, user_id):
+        subscribed_to = get_object_or_404(User, pk=user_id)
+
+        subscriptions = Subscription.objects.filter(
+            subscriber=request.user,
+            subscribed_to=subscribed_to
+        )
+        if not subscriptions.exists():
+            return Response({
+                'error': 'Нельзя удалить несуществующую подписку'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        subscriptions.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
