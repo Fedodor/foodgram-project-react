@@ -84,18 +84,20 @@ class Subscription(models.Model):
         verbose_name='Подписчик',
         related_name='subscribed_to',
         on_delete=models.CASCADE,
+        default=None,
     )
     subscriber = models.ForeignKey(
         User,
         verbose_name='Автор рецепта',
         related_name='subscriber',
         on_delete=models.CASCADE,
+        default=None,
     )
 
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        ordering = ('user',)
+        ordering = ('subscriber',)
         constraints = [
             models.UniqueConstraint(
                 fields=['subscriber', 'subscribed_to'],
