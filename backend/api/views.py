@@ -87,7 +87,7 @@ class SubscriptionListView(ListAPIView):
 
     def get_queryset(self):
         current_user = self.request.user
-        queryset = User.objects.filter(subscribed_to__subscriber=current_user)
+        queryset = User.objects.filter(subscription__subscriber=current_user)
 
         return queryset
 
@@ -97,13 +97,13 @@ class SubscriptionView(ListAPIView):
     serializer_class = SubcriptionSerializer
 
     def post(self, request, user_id):
-        subscribed_to = get_object_or_404(User, pk=user_id)
-        subscribed_to.save()
+        subscription = get_object_or_404(User, pk=user_id)
+        subscription.save()
         subscriber = request.user
 
         serializer_create = SubscriptionCreateSerializer(
             data={
-                'subscribed_to': subscribed_to.id,
+                'subscription': subscription.id,
                 'subscriber': subscriber.id,
             },
             context={'request': request}
@@ -115,11 +115,11 @@ class SubscriptionView(ListAPIView):
         )
 
     def delete(self, request, user_id):
-        subscribed_to = get_object_or_404(User, pk=user_id)
+        subscription = get_object_or_404(User, pk=user_id)
 
         subscriptions = Subscription.objects.filter(
             subscriber=request.user,
-            subscribed_to=subscribed_to
+            subscription=subscription
         )
         if not subscriptions.exists():
             return Response({
