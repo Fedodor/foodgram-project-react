@@ -97,14 +97,14 @@ class SubscriptionView(ListAPIView):
     serializer_class = SubcriptionSerializer
 
     def post(self, request, user_id):
-        subscribed_to = get_object_or_404(User, pk=user_id)
-        subscribed_to.save()
-        subscriber = request.user
+        author = get_object_or_404(User, pk=user_id)
+        author.save()
+        user = request.user
 
         serializer_create = SubscriptionCreateSerializer(
             data={
-                'subscribed_to': subscribed_to.id,
-                'subscriber': subscriber.id,
+                'author': author.id,
+                'user': user.id,
             },
             context={'request': request}
         )
@@ -115,11 +115,11 @@ class SubscriptionView(ListAPIView):
         )
 
     def delete(self, request, user_id):
-        subscribed_to = get_object_or_404(User, pk=user_id)
+        author = get_object_or_404(User, pk=user_id)
 
         subscriptions = Subscription.objects.filter(
-            subscriber=request.user,
-            subscribed_to=subscribed_to
+            user=request.user,
+            author=author
         )
         if not subscriptions.exists():
             return Response({
