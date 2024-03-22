@@ -42,8 +42,8 @@ class UsersViewSet(UserViewSet):
         user = request.user
         serializer = SubscriptionCreateSerializer(
             data={
-                'author': author.id,
-                'user': user.id
+                'subscription': author.id,
+                'subscriber': user.id
             },
             context={'request': request})
         if request.method == 'POST':
@@ -53,7 +53,7 @@ class UsersViewSet(UserViewSet):
                 serializer.data,
                 status=status.HTTP_201_CREATED)
         serializer.is_valid(raise_exception=True)
-        subscription = Subscription.objects.get(
+        subscription = Subscription.objects.filter(
             user=user, author=author)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
