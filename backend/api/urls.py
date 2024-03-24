@@ -4,7 +4,6 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     UsersViewSet, IngredientViewSet,
     TagViewSet, RecipeViewSet,
-    SubscriptionListView, SubscriptionView,
 )
 
 app_name = 'api'
@@ -17,17 +16,7 @@ router_v1.register('tags', TagViewSet, basename='tags')
 router_v1.register('recipes', RecipeViewSet, basename='recipes')
 
 urlpatterns = [
-    path(
-        'users/subscriptions/',
-        SubscriptionListView.as_view(),
-        name='subscription-list'
-    ),
-    path(
-        'users/<int:user_id>/subscribe/',
-        SubscriptionView.as_view(),
-        name='subscription'
-    ),
+    path('', include(router_v1.urls)),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
-    path('', include(router_v1.urls)),
 ]
