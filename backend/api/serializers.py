@@ -143,9 +143,6 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
                 )
         return data
 
-    def create(self, validated_data):
-        return Subscription.objects.create(**validated_data)
-
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredients.id')
