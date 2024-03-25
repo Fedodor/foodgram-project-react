@@ -154,9 +154,9 @@ class RecipeIngredientPostSerializer(serializers.ModelSerializer):
         min_value=Length.MIN_AMOUNT_OF_INGREDIENTS.value,
         max_value=Length.MAX_AMOUNT_OF_INGREDIENTS.value
     )
-    name = serializers.ReadOnlyField(source='ingredients.name')
+    name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
-        source='ingredients.measurement_unit'
+        source='ingredient.measurement_unit'
     )
 
     class Meta:
