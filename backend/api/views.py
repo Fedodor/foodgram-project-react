@@ -93,6 +93,12 @@ class UsersViewSet(UserViewSet):
             context={'request': self.request})
         return Response(serializer.data)
 
+    def get_subscribed_recipes(self, user):
+        subscribed_users = user.following.all()
+        subscribed_recipes = Recipe.objects.filter(
+            author__in=subscribed_users)
+        return subscribed_recipes
+
     def list(self, request, *args, **kwargs):
         is_subscribed = request.query_params.get('is_subscribed', False)
 
