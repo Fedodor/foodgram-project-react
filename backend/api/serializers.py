@@ -1,4 +1,3 @@
-from django.db.models import F
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import exceptions, serializers
@@ -149,15 +148,15 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='ingredient.id')
+    id = serializers.IntegerField(source='ingredients.id')
     amount = serializers.IntegerField(
         write_only=True,
         min_value=Length.MIN_AMOUNT_OF_INGREDIENTS.value,
         max_value=Length.MAX_AMOUNT_OF_INGREDIENTS.value
     )
-    name = serializers.ReadOnlyField(source='ingredient.name')
+    name = serializers.ReadOnlyField(source='ingredientss.name')
     measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit'
+        source='ingredients.measurement_unit'
     )
 
     class Meta:
@@ -166,18 +165,17 @@ class RecipeIngredientPostSerializer(serializers.ModelSerializer):
 
     def validate_id(self, id):
         set_of_ingredients = set()
-        for item in id:
-            if not Ingredient.objects.filter(id=item['id']).exists():
-                raise serializers.ValidationError(
-                    'Указанного Ингредиента не существует')
-            ingredient = get_object_or_404(
-                Ingredient.objects.all(), id=item['id']
+        if not Ingredient.objects.filter(id=id).exists():
+            raise serializers.ValidationError(
+                'Указанного Ингредиента не существует')
+        ingredient = get_object_or_404(
+            Ingredient.objects.all(), id=id
+        )
+        if ingredient in set_of_ingredients:
+            raise exceptions.ValidationError(
+                {'ingredients': 'Ингредиенты не могут повторяться.'}
             )
-            if ingredient in set_of_ingredients:
-                raise exceptions.ValidationError(
-                    {'ingredients': 'Ингредиенты не могут повторяться.'}
-                )
-            set_of_ingredients.add(ingredient)
+        set_of_ingredients.add(ingredient)
         return id
 
     def to_internal_value(self, data):
@@ -193,7 +191,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
-    ingredients = serializers.SerializerMethodField()
+    ingredients = RecipeIngredientPostSerializer()
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     image = Base64ImageField()
@@ -204,14 +202,6 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
         )
-
-    def get_ingredients(self, recipe):
-        ingredients = recipe.ingredients.values(
-            'id', 'name', 'measurement_unit', amount=F(
-                'ingredients_recipe__amount'
-            )
-        )
-        return ingredients
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
@@ -249,7 +239,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         required_fields = ('tags', 'ingredients')
 
     def validate(self, data):
-        ingredients = self.initial_data.get('ingredients')
+        ingredients = data.get('ingredients')
         if not ingredients:
             raise exceptions.ValidationError(
                 {'ingredients': 'Должен быть хотя бы один ингредиент.'}
@@ -259,9 +249,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             raise exceptions.ValidationError(
                 {'ingredients': 'Ингредиенты не могут повторяться.'}
             )
-        return data
-
-    def validate_tags(self, tags):
+        tags = data.get('tags')
         if not tags:
             raise exceptions.ValidationError(
                 {'tags': 'Должен быть хотя бы один тег.'}
@@ -270,16 +258,18 @@ class RecipePostSerializer(serializers.ModelSerializer):
             raise exceptions.ValidationError(
                 {'tags': 'Теги не могут повторяться.'}
             )
-        return tags
+        return data
 
     def create_ingredients_amounts(self, ingredients_data, recipe):
         recipe_ingredients = []
+        ingredients_id = [
+            ingredient['id'] for ingredient in ingredients_data
+        ]
         for ingredient_data in ingredients_data:
-            ingredient_id = ingredient_data['id']
             recipe_ingredients.append(
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredients_id=ingredient_id,
+                    ingredients_id=ingredients_id,
                     amount=ingredient_data['amount']
                 )
             )
@@ -340,10 +330,9 @@ class FavoriteSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        serializer = RecipeMiniSerializer(
-            instance, context={"request": self.context.get("request")}
-        )
-        return serializer.data
+        return RecipeMiniSerializer(
+            instance=instance.recipe,
+        ).data
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -373,7 +362,6 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        serializer = RecipeMiniSerializer(
-            instance, context={"request": self.context.get("request")}
-        )
-        return serializer.data
+        return RecipeMiniSerializer(
+            instance=instance.recipe,
+        ).data
