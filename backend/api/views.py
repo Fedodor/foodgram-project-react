@@ -5,7 +5,6 @@ from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.generics import ListAPIView
 from rest_framework.permissions import (
     IsAuthenticated, SAFE_METHODS
 )
@@ -61,6 +60,21 @@ class UsersViewSet(UserViewSet):
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(
+        detail=False,
+        permission_classes=(IsAuthenticated,)
+    )
+    def subscriptions(self, request):
+        queryset = Subscription.objects.filter(
+            user=request.user).order_by('-id')
+        page = self.paginate_queryset(queryset)
+        serializer = SubcriptionSerializer(
+            page,
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
+
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreatesSerializer
@@ -85,7 +99,7 @@ class UsersViewSet(UserViewSet):
         if is_subscribed:
             user = request.user
             queryset = User.objects.prefetch_related(
-                'recipes').filter(subscriptions__user=user)
+                'recipes').filter(subscription__user=user)
         else:
             queryset = User.objects.prefetch_related('recipes')
 
@@ -107,18 +121,6 @@ class UsersViewSet(UserViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({'detail': 'Пароли не совпадают.'},
                         status=status.HTTP_400_BAD_REQUEST)
-
-
-class SubscriptionListView(ListAPIView):
-    serializer_class = SubcriptionSerializer
-    pagination_class = FoodgramPagination
-    permission_classes = (IsAuthenticated,)
-
-    def get_queryset(self):
-        current_user = self.request.user
-        queryset = User.objects.filter(subscription__user=current_user)
-
-        return queryset
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
