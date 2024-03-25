@@ -148,7 +148,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='ingredient.id')
+    id = serializers.IntegerField(source='ingredients.id')
     amount = serializers.IntegerField(
         write_only=True,
         min_value=Length.MIN_AMOUNT_OF_INGREDIENTS.value,
@@ -191,7 +191,9 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
-    ingredients = RecipeIngredientPostSerializer()
+    ingredients = RecipeIngredientPostSerializer(
+        many=True, source='ingredients_recipe'
+    )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     image = Base64ImageField()
