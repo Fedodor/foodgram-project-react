@@ -148,7 +148,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='ingredients.id')
+    id = serializers.IntegerField(source='ingredient.id')
     amount = serializers.IntegerField(
         write_only=True,
         min_value=Length.MIN_AMOUNT_OF_INGREDIENTS.value,
