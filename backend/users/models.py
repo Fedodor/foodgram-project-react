@@ -55,14 +55,6 @@ class User(AbstractUser):
         default=USER
     )
 
-    following = models.ManyToManyField(
-        "self",
-        through='Subscription',
-        through_fields=('user', 'author'),
-        symmetrical=False,
-        related_name='following_relationships'
-    )
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = (
         'username',

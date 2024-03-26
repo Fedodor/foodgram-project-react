@@ -91,7 +91,7 @@ class Recipe(models.Model):
         verbose_name='Список тегов',
     )
     author = models.ForeignKey(
-        Users,
+        User,
         on_delete=models.SET_NULL,
         null=True,
     )
