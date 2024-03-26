@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     UsersViewSet, IngredientViewSet,
-    TagViewSet, SubscriptionViewSet, RecipeViewSet,
+    TagViewSet, SubscriptionListView, RecipeViewSet,
 )
 
 app_name = 'api'
@@ -16,8 +16,11 @@ router_v1.register('tags', TagViewSet, basename='tags')
 router_v1.register('recipes', RecipeViewSet, basename='recipes')
 
 urlpatterns = [
-    path('users/subscriptions/', SubscriptionViewSet.as_view(
-        {'get': 'list_subscriptions'}), name='subscriptions-list'),
+    path(
+        'users/subscriptions/',
+        SubscriptionListView.as_view(),
+        name='subscription-list'
+    ),
     path('', include(router_v1.urls)),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),

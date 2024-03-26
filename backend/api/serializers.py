@@ -35,9 +35,9 @@ class UserGetSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        return user.is_authenticated and obj.subscription.filter(
-            user=user
-        ).exists()
+        return bool(user.is_authenticated and Subscription.objects.filter(
+                subscriber=user, subscription=obj
+        ).exists())
 
 
 class UserCreatesSerializer(UserCreateSerializer):
@@ -92,29 +92,24 @@ class SubcriptionSerializer(UserGetSerializer):
             'is_subscribed', 'recipes', 'recipes_count'
         )
 
-    def get_recipes(self, obj):
+    def get_recipes(self, user):
         request = self.context.get('request')
-        queryset = Recipe.objects.filter(author=obj.author)
-        if request and not request.user.is_anonymous:
-            recipes_limit = request.query_params.get('recipes_limit')
-            if recipes_limit:
-                try:
-                    queryset = queryset[:int(recipes_limit)]
-                except TypeError:
-                    pass
+        queryset = Recipe.objects.filter(author=user)
+        recipes_limit = request.query_params.get('recipes_limit')
+        if recipes_limit:
+            try:
+                queryset = queryset[:int(recipes_limit)]
+            except TypeError:
+                pass
         return RecipeMiniSerializer(
             queryset, many=True, context=self.context
         ).data
 
-    def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
+    def get_recipes_count(self, user):
+        return Recipe.objects.filter(author=user).count()
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
-    author = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all()
-    )
 
     class Meta:
         model = Subscription
@@ -142,6 +137,13 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
                     SUBSCRIPTION_NOT_FOUND_ERROR
                 )
         return data
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        return SubcriptionSerializer(
+            instance=instance.subscriber,
+            context={'request': request}
+        ).data
 
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
