@@ -61,6 +61,26 @@ class UsersViewSet(UserViewSet):
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def paginate_and_serialize(self, queryset):
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(
+                page, many=True,
+                context={'request': self.request})
+            return self.get_paginated_response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        is_subscribed = request.query_params.get('is_subscribed', False)
+
+        if is_subscribed:
+            user = request.user
+            queryset = User.objects.prefetch_related(
+                'recipes').filter(subscription__user=user)
+        else:
+            queryset = User.objects.prefetch_related('recipes')
+
+        return self.paginate_and_serialize(queryset)
+
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreatesSerializer
