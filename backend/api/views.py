@@ -4,14 +4,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
 from rest_framework import status
-from rest_framework.generics import ListAPIView
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated, SAFE_METHODS
 )
 from rest_framework.response import Response
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
-
+from rest_framework.viewsets import (
+    ReadOnlyModelViewSet, ModelViewSet, ViewSet
+)
 from .filters import IngredientFilter, RecipeFilter
 from .paginations import FoodgramPagination
 from .permissions import IsAuthorOrReadOnly
@@ -84,16 +84,27 @@ class UsersViewSet(UserViewSet):
                         status=status.HTTP_400_BAD_REQUEST)
 
 
-class SubscriptionListView(ListAPIView):
+class SubscriptionViewSet(ViewSet):
     serializer_class = SubcriptionSerializer
-    pagination_class = FoodgramPagination
     permission_classes = (IsAuthenticated,)
 
-    def get_queryset(self):
-        current_user = self.request.user
-        queryset = User.objects.filter(subscription__user=current_user)
+    def get_user(self, id):
+        return get_object_or_404(User, id=id)
 
-        return queryset
+    def get_serializer(self, *args, **kwargs):
+        return self.serializer_class(*args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='subscriptions',
+            url_name='list_subscriptions')
+    def list_subscriptions(self, request):
+        queryset = Subscription.objects.filter(
+            user=request.user).order_by('-id')
+        paginator = FoodgramPagination()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(paginated_queryset,
+                                         context={'request': request},
+                                         many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
