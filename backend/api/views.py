@@ -38,9 +38,9 @@ class UsersViewSet(UserViewSet):
         methods=('POST', 'DELETE'),
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, user_id):
+    def subscribe(self, request, id):
         author = get_object_or_404(
-            User, pk=user_id
+            User, id=id
         )
         author.save()
         user = request.user
