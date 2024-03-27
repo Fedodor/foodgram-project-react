@@ -93,6 +93,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        default=None,
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
