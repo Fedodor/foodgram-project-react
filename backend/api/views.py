@@ -73,6 +73,7 @@ class UsersViewSet(UserViewSet):
             data=request.data,
             context={'request': request}
         )
+
         serializer.is_valid(raise_exception=True)
         current_password = serializer.validated_data['current_password']
         new_password = serializer.validated_data['new_password']
