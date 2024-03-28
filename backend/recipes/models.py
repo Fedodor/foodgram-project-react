@@ -24,6 +24,7 @@ class Tag(models.Model):
     slug = models.SlugField(
         verbose_name='Слаг',
         max_length=Length.MAX_LEN_RECIPES_CHARFIELD.value,
+        unique=True,
     )
 
     class Meta:
@@ -78,9 +79,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         upload_to='rescipes/images/',
-        null=True,
         default=None,
-        blank=True,
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -93,7 +92,6 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        default=None,
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
@@ -117,9 +115,8 @@ class RecipeIngredient(models.Model):
         Recipe,
         related_name='ingredients_recipe',
         on_delete=models.CASCADE,
-        default=None,
     )
-    ingredients = models.ForeignKey(
+    ingredient = models.ForeignKey(
         Ingredient,
         related_name='ingredients_recipe',
         on_delete=models.CASCADE,
@@ -143,7 +140,7 @@ class RecipeIngredient(models.Model):
         verbose_name_plural = 'Количество ингридиентов'
         ordering = ('recipe',)
         constraints = [models.UniqueConstraint(
-            fields=('recipe', 'ingredients'),
+            fields=('recipe', 'ingredient'),
             name='unique_recipe_ingredient')
         ]
 
@@ -157,15 +154,13 @@ class Favorite(models.Model):
         Recipe,
         verbose_name='Избранные рецепты',
         on_delete=models.CASCADE,
-        related_name='favorites_recipe',
-        default=None,
+        related_name='favorite_recipe',
     )
     user = models.ForeignKey(
         User,
         verbose_name='Пользователь',
         on_delete=models.CASCADE,
-        related_name='favorites_user',
-        default=1
+        related_name='favorite_user',
     )
 
     class Meta:
@@ -187,13 +182,11 @@ class ShoppingCart(models.Model):
         Recipe,
         verbose_name='Рецепты в корзине',
         on_delete=models.CASCADE,
-        default=None,
     )
     user = models.ForeignKey(
         User,
         verbose_name='Владелец списка покупок',
         on_delete=models.CASCADE,
-        default=1
     )
 
     class Meta:
