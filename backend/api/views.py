@@ -93,7 +93,7 @@ class SubscriptionListView(ListAPIView):
     def get_queryset(self):
         current_user = self.request.user
         queryset = User.objects.filter(
-            author__user=current_user
+            subscription__user=current_user
         )
         return queryset
 
