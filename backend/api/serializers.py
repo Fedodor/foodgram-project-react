@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import exceptions, serializers
 from rest_framework.validators import UniqueValidator
 
@@ -21,7 +21,7 @@ RECIPE_VALIDATION_ERROR_FAVORITES = 'Рецепт уже добавлен в и�
 NOT_FOUND_FIELDS_ERROR = 'Не хватает поля тэгов или ингредиентов.'
 
 
-class UserGetSerializer(serializers.ModelSerializer):
+class UserGetSerializer(UserSerializer):
 
     is_subscribed = serializers.SerializerMethodField()
 
@@ -36,7 +36,7 @@ class UserGetSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         return bool(user.is_authenticated and Subscription.objects.filter(
-                subscriber=user, subscribed_to=obj
+                subscriber=user, subscription=obj
         ).exists())
 
 
@@ -116,15 +116,15 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
         fields = ('user', 'author')
 
     def validate(self, attrs):
-        subscriber = attrs.get('subscriber')
-        subscribed_to = attrs.get('subscribed_to')
+        user = attrs.get('user')
+        author = attrs.get('author')
         if self.context['request'].method == 'POST':
-            if subscribed_to == subscriber:
+            if author == user:
                 raise exceptions.ValidationError(
                     ME_SUBSCRIPTION_VALIDATION_ERROR
                 )
             if Subscription.objects.filter(
-                subscriber=subscriber, subscribed_to=subscribed_to
+                user=user, author=author
             ).exists():
                 raise exceptions.ValidationError(
                     RE_SUBSCRIPTION_VALIDATION_ERROR
@@ -132,7 +132,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
         if self.context['request'].method == 'DELETE':
             try:
                 Subscription.objects.get(
-                    subscribed_to=subscribed_to, subscriber=subscriber
+                    author=author, user=user
                 )
             except Subscription.DoesNotExist:
                 raise serializers.ValidationError(
@@ -143,7 +143,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         request = self.context.get('request')
         return SubcriptionSerializer(
-            instance=instance.subscriber,
+            instance=instance.user,
             context={'request': request}
         ).data
 
@@ -171,7 +171,7 @@ class IngredientRecipeWriteSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='ingredients.id')
+    id = serializers.IntegerField(source='ingredient.id')
     amount = serializers.IntegerField(
         write_only=True,
         min_value=Length.MIN_AMOUNT_OF_INGREDIENTS.value,
@@ -298,7 +298,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
-        ingredients_data = validated_data.pop('ingredients')
+        ingredients_data = validated_data.pop('ingredients_recipe')
         tags = validated_data.pop('tags')
         validated_data['author'] = self.context['request'].user
         recipe = Recipe.objects.create(**validated_data)

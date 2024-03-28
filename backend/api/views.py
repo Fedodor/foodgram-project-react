@@ -39,15 +39,15 @@ class UsersViewSet(UserViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def subscribe(self, request, id):
-        subscribed_to = get_object_or_404(
+        author = get_object_or_404(
             User, id=id
         )
-        subscribed_to.save()
-        subscriber = request.user
+        author.save()
+        user = request.user
         serializer = SubscriptionCreateSerializer(
             data={
-                'subscribed_to': subscribed_to.id,
-                'subscriber': subscriber.id
+                'author': author.id,
+                'user': user.id
             },
             context={'request': request})
         if request.method == 'POST':
@@ -58,7 +58,7 @@ class UsersViewSet(UserViewSet):
                 status=status.HTTP_201_CREATED)
         serializer.is_valid(raise_exception=True)
         subscription = Subscription.objects.filter(
-            subscriber=subscriber, subscribed_to=subscribed_to)
+            user=user, author=author)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -93,7 +93,7 @@ class SubscriptionListView(ListAPIView):
     def get_queryset(self):
         current_user = self.request.user
         queryset = User.objects.filter(
-            subscribed_to__subscriber=current_user
+            author__user=current_user
         )
         return queryset
 
