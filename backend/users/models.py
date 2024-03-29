@@ -20,7 +20,6 @@ class User(AbstractUser):
         verbose_name='Псевдоним',
         default='username',
         max_length=Length.MAX_LENGTH_USERNAME.value,
-        blank=False,
         unique=True,
         validators=(
             [
@@ -33,7 +32,6 @@ class User(AbstractUser):
     password = models.CharField(
         verbose_name='Пароль',
         max_length=Length.MAX_LENGTH_PASSWORD.value,
-        default='secret',
     )
     email = models.EmailField(
         'Почта',
