@@ -215,7 +215,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
     ingredients = IngredientRecipeReadSerializer(
-        many=True, source='ingredients_recipe'
+        many=True,
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
@@ -243,7 +243,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class RecipePostSerializer(serializers.ModelSerializer):
     ingredients = IngredientRecipeWriteSerializer(
-        many=True, required=True, source='ingredients_recipe'
+        many=True, required=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True, required=True
@@ -299,18 +299,19 @@ class RecipePostSerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         validated_data['author'] = self.context['request'].user
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
-        self.create_ingredients_amounts(ingredients_data, recipe)
-        return recipe
+        instance = super().create(validated_data)
+        instance.tags.set(tags)
+        self.create_ingredients_amounts(ingredients_data, instance)
+        return instance
 
     def update(self, instance, validated_data):
+        instance.image.delete()
+        instance.image = validated_data.get('image', instance.image)
         tags_data = validated_data.pop('tags')
-        instance.tags.clear()
         instance.tags.set(tags_data)
         ingredients_data = validated_data.pop('ingredients')
-        ingredients_recipe = instance.ingredients_recipe.all()
-        ingredients_recipe.delete()
+        recipe_ingredients = instance.ingredients_recipe.all()
+        recipe_ingredients.delete()
         self.create_ingredients_amounts(
             recipe=instance, ingredients_data=ingredients_data
         )
