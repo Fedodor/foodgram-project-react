@@ -110,14 +110,18 @@ class SubcriptionSerializer(UserGetSerializer):
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all()
+    )
 
     class Meta:
         model = Subscription
         fields = ('user', 'author')
 
-    def validate(self, attrs):
-        user = attrs.get('user')
-        author = attrs.get('author')
+    def validate(self, data):
+        user = self.context['request'].user
+        author = data.get('author')
         if self.context['request'].method == 'POST':
             if author == user:
                 raise exceptions.ValidationError(
@@ -138,7 +142,10 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     SUBSCRIPTION_NOT_FOUND_ERROR
                 )
-        return attrs
+        return data
+
+    def create(self, validated_data):
+        return Subscription.objects.create(**validated_data)
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -146,28 +153,6 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             instance=instance.user,
             context={'request': request}
         ).data
-
-
-class IngredientRecipeReadSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source='ingredient.id')
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit'
-    )
-
-    class Meta:
-        model = RecipeIngredient
-        fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
-class IngredientRecipeWriteSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all()
-    )
-
-    class Meta:
-        model = RecipeIngredient
-        fields = ('id', 'amount')
 
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
@@ -214,8 +199,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
-    ingredients = IngredientRecipeReadSerializer(
-        many=True,
+    ingredients = RecipeIngredientPostSerializer(
+        many=True, required=True,
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
@@ -242,7 +227,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    ingredients = IngredientRecipeWriteSerializer(
+    ingredients = RecipeIngredientPostSerializer(
         many=True, required=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
@@ -264,7 +249,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         required_fields = ('tags', 'ingredients')
 
     def validate(self, data):
-        ingredients = data.get('ingredients_recipe')
+        ingredients = data.get('ingredients')
         if not ingredients:
             raise exceptions.ValidationError(
                 {'ingredients': 'Должен быть хотя бы один ингредиент.'}
