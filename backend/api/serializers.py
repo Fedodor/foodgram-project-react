@@ -271,13 +271,15 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return data
 
     def create_ingredients_amounts(self, ingredients_data, recipe):
-        recipe_ingredients = [
-         RecipeIngredient(
-                recipe=recipe,
-                ingredient=ingredient['id'],
-                amount=ingredient['amount']
-            ) for ingredient in ingredients_data
-        ]
+        recipe_ingredients = []
+        for ingredient in ingredients_data:
+            recipe_ingredients.append(
+                RecipeIngredient(
+                    recipe=recipe,
+                    ingredient=ingredient['id'],
+                    amount=ingredient['amount']
+                )
+            )
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
