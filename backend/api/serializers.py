@@ -156,12 +156,23 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='ingredient.id')
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all(),
+        source='ingredient'
+    )
     amount = serializers.IntegerField(
         write_only=True,
         min_value=Length.MIN_AMOUNT_OF_INGREDIENTS.value,
         max_value=Length.MAX_AMOUNT_OF_INGREDIENTS.value
     )
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'amount')
+
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
@@ -199,8 +210,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
-    ingredients = RecipeIngredientPostSerializer(
-        many=True, required=True,
+    ingredients = RecipeIngredientSerializer(
+        many=True, required=True, source='ingredients_recipe'
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
@@ -272,13 +283,12 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def create_ingredients_amounts(self, ingredients_data, recipe):
         recipe_ingredients = []
-        for ingredient_data in ingredients_data:
-            ingredient_id = ingredient_data['id']
+        for ingredient in ingredients_data:
             recipe_ingredients.append(
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredient_id=ingredient_id,
-                    amount=ingredient_data['amount']
+                    ingredient=ingredient['ingredient'],
+                    amount=ingredient['amount']
                 )
             )
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
