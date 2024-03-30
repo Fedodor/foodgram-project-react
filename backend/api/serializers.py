@@ -277,7 +277,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             recipe_ingredients.append(
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredients_id=ingredient_id,
+                    ingredient_id=ingredient_id,
                     amount=ingredient_data['amount']
                 )
             )
