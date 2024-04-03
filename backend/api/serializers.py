@@ -105,8 +105,8 @@ class SubcriptionSerializer(UserGetSerializer):
             queryset, many=True, context=self.context
         ).data
 
-    def get_recipes_count(self, user):
-        return Recipe.objects.filter(author=user).count()
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.author).count()
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
@@ -158,7 +158,6 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
-        source='ingredient'
     )
     amount = serializers.IntegerField(
         write_only=True,
@@ -239,7 +238,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class RecipePostSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientPostSerializer(
-        many=True, required=True,
+        many=True, required=True, source='ingredients_recipe'
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True, required=True
@@ -265,8 +264,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
             raise exceptions.ValidationError(
                 {'ingredients': 'Должен быть хотя бы один ингредиент.'}
             )
-        ingredients_id = [ingredient['id'] for ingredient in ingredients]
-        if len(ingredients_id) != len(set(ingredients_id)):
+        ingredient_id = [ingredient['id'] for ingredient in ingredients]
+        if len(ingredient_id) != len(set(ingredient_id)):
             raise exceptions.ValidationError(
                 {'ingredients': 'Ингредиенты не могут повторяться.'}
             )
@@ -287,7 +286,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             recipe_ingredients.append(
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredient=ingredient['ingredient'],
+                    ingredient_id=ingredient['id'],
                     amount=ingredient['amount']
                 )
             )
