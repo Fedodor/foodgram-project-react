@@ -157,7 +157,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all(),
+        queryset=Ingredient.objects.all(), source='ingredient'
     )
     amount = serializers.IntegerField(
         write_only=True,
@@ -210,7 +210,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(
-        many=True, required=True,
+        many=True, required=True, source='ingredients_recipe'
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
