@@ -170,7 +170,7 @@ class RecipeIngredientPostSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
+class RecipeIngredientGetSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -209,8 +209,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
-    ingredients = RecipeIngredientSerializer(
-        many=True, required=True, source='ingredients_recipe'
+    ingredients = RecipeIngredientGetSerializer(
+        many=True, required=True,
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
@@ -238,7 +238,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class RecipePostSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientPostSerializer(
-        many=True, required=True, source='ingredients_recipe'
+        many=True, required=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True, required=True
