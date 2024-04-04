@@ -52,7 +52,7 @@ class UsersViewSet(UserViewSet):
             context={'request': request})
         if request.method == 'POST':
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer.save(user=user)
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED)

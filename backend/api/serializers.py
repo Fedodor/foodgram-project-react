@@ -92,9 +92,9 @@ class SubcriptionSerializer(UserGetSerializer):
             'is_subscribed', 'recipes', 'recipes_count'
         )
 
-    def get_recipes(self, user):
+    def get_recipes(self, obj):
         request = self.context.get('request')
-        queryset = Recipe.objects.filter(author=user)
+        queryset = Recipe.objects.filter(author=obj.author)
         recipes_limit = request.query_params.get('recipes_limit')
         if recipes_limit:
             try:
@@ -157,7 +157,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all(), source='ingredient'
+        queryset=Ingredient.objects.all(),
     )
     amount = serializers.IntegerField(
         write_only=True,
@@ -238,7 +238,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class RecipePostSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientPostSerializer(
-        many=True, required=True,
+        many=True, required=True, source='ingredients_recipe'
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True, required=True
