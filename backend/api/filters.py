@@ -6,7 +6,7 @@ from recipes.models import Ingredient, Recipe
 
 
 class IngredientFilter(FilterSet):
-    name = CharFilter(lookup_expr='startswith')
+    name = CharFilter(lookup_expr='istartswith')
 
     class Meta:
         model = Ingredient
@@ -14,7 +14,9 @@ class IngredientFilter(FilterSet):
 
 
 class RecipeFilter(FilterSet):
-    tags = AllValuesMultipleFilter(field_name='tags__slug')
+    tags = AllValuesMultipleFilter(
+        field_name='tags__slug', lookup_expr='contains'
+    )
     is_favorited = NumberFilter(
         method='filter_is_favorited'
     )
