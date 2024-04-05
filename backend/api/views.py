@@ -118,7 +118,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.all().order_by('-pud_date')
+    queryset = Recipe.objects.all().order_by('-pub_date')
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     permission_classes = IsAuthorOrReadOnly,
