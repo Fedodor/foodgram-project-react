@@ -259,7 +259,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         required_fields = ('tags', 'ingredients')
 
     def validate(self, data):
-        ingredients = data.get('ingredients')
+        ingredients = data.get('ingredients_recipe')
         if not ingredients:
             raise exceptions.ValidationError(
                 {'ingredients': 'Должен быть хотя бы один ингредиент.'}
@@ -302,13 +302,12 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        instance.image.delete()
-        instance.image = validated_data.get('image', instance.image)
         tags_data = validated_data.pop('tags')
+        instance.tags.clear()
         instance.tags.set(tags_data)
         ingredients_data = validated_data.pop('ingredients_recipe')
-        recipe_ingredients = instance.ingredients_recipe.all()
-        recipe_ingredients.delete()
+        ingredients_recipe = instance.ingredients_recipe.all()
+        ingredients_recipe.delete()
         self.create_ingredients_amounts(
             recipe=instance, ingredients_data=ingredients_data
         )

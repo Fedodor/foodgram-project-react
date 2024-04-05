@@ -20,8 +20,8 @@ from .serializers import (
     UserGetSerializer, UserCreatesSerializer,
     FavoriteSerializer, IngredientSerializer,
     TagSerializer, SubcriptionSerializer, ShoppingCartSerializer,
-    SubscriptionCreateSerializer, RecipePostSerializer,
-    RecipeGetSerializer
+    # SubscriptionCreateSerializer,
+    RecipePostSerializer, RecipeGetSerializer
 )
 from core.utils import create_list_of_shopping_cart, delete, post
 from recipes.models import Favorite, Ingredient, Recipe, Tag, ShoppingCart
@@ -38,27 +38,29 @@ class UsersViewSet(UserViewSet):
         methods=('POST', 'DELETE'),
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, id):
-        author = get_object_or_404(
-            User, id=id
-        )
+    def subscribe(self, request, **kwargs):
+        author_id = self.kwargs.get('id')
+        author = get_object_or_404(User, id=author_id)
         author.save()
         user = request.user
-        serializer = SubscriptionCreateSerializer(
-            data={
-                'author': author.id,
-                'user': user.id
-            },
-            context={'request': request})
+        serializer = SubcriptionSerializer(
+            author,
+            data=request.data,
+            context={'request': request}
+        )
         if request.method == 'POST':
             serializer.is_valid(raise_exception=True)
-            serializer.save(user=user)
+            # serializer.save(user=user)
+            Subscription.objects.create(user=user, author=author)
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED)
         serializer.is_valid(raise_exception=True)
-        subscription = Subscription.objects.filter(
-            user=user, author=author)
+        subscription = get_object_or_404(
+            Subscription,
+            user=user,
+            author=author
+        )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -67,8 +69,9 @@ class UsersViewSet(UserViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def subscriptions(self, request):
-        queryset = Subscription.objects.filter(
-            user=request.user).order_by('-id')
+        queryset = User.objects.filter(
+            subscription__user=request.user
+        )
         page = self.paginate_queryset(queryset)
         serializer = SubcriptionSerializer(
             page,
@@ -81,30 +84,6 @@ class UsersViewSet(UserViewSet):
         if self.action == 'create':
             return UserCreatesSerializer
         return UserGetSerializer
-
-    def paginate_and_serialize(self, queryset):
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(
-                page, many=True,
-                context={'request': self.request})
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(
-            queryset, many=True,
-            context={'request': self.request})
-        return Response(serializer.data)
-
-    def list(self, request, *args, **kwargs):
-        is_subscribed = request.query_params.get('is_subscribed', False)
-
-        if is_subscribed:
-            user = request.user
-            queryset = User.objects.prefetch_related(
-                'recipes').filter(subscription__user=user)
-        else:
-            queryset = User.objects.prefetch_related('recipes')
-
-        return self.paginate_and_serialize(queryset)
 
     @action(detail=False, methods=['POST'])
     def set_password(self, request):
