@@ -95,12 +95,13 @@ class SubcriptionSerializer(UserGetSerializer):
     def get_recipes(self, obj):
         request = self.context.get('request')
         queryset = Recipe.objects.filter(author=obj.author)
-        recipes_limit = request.query_params.get('recipes_limit')
-        if recipes_limit:
-            try:
-                queryset = queryset[:int(recipes_limit)]
-            except TypeError:
-                pass
+        if request and not request.user.is_anonymous:
+            recipes_limit = request.query_params.get('recipes_limit')
+            if recipes_limit:
+                try:
+                    queryset = queryset[:int(recipes_limit)]
+                except TypeError:
+                    pass
         return RecipeMiniSerializer(
             queryset, many=True, context=self.context
         ).data
