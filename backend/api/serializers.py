@@ -92,9 +92,9 @@ class SubcriptionSerializer(UserGetSerializer):
             'is_subscribed', 'recipes', 'recipes_count'
         )
 
-    def get_recipes(self, user):
+    def get_recipes(self, obj):
         request = self.context.get('request')
-        queryset = Recipe.objects.filter(author=user)
+        queryset = Recipe.objects.filter(author=obj.author)
         recipes_limit = request.query_params.get('recipes_limit')
         if recipes_limit:
             try:
@@ -105,8 +105,8 @@ class SubcriptionSerializer(UserGetSerializer):
             queryset, many=True, context=self.context
         ).data
 
-    def get_recipes_count(self, user):
-        return Recipe.objects.filter(author=user).count()
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.author).count()
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
