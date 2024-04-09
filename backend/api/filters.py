@@ -15,7 +15,7 @@ class IngredientFilter(FilterSet):
 
 class RecipeFilter(FilterSet):
     tags = AllValuesMultipleFilter(
-        field_name='tags__slug', lookup_expr='contains'
+        field_name='tags__slug__in',
     )
     is_favorited = NumberFilter(
         method='filter_is_favorited'
