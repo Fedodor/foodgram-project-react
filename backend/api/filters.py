@@ -1,12 +1,9 @@
-from django_filters import (
-    AllValuesMultipleFilter, CharFilter, FilterSet, NumberFilter,
-)
-
+from django_filters.rest_framework import FilterSet, filters
 from recipes.models import Ingredient, Recipe
 
 
 class IngredientFilter(FilterSet):
-    name = CharFilter(lookup_expr='istartswith')
+    name = filters.CharFilter(lookup_expr='istartswith')
 
     class Meta:
         model = Ingredient
@@ -14,14 +11,14 @@ class IngredientFilter(FilterSet):
 
 
 class RecipeFilter(FilterSet):
-    author = CharFilter()
-    tags = AllValuesMultipleFilter(
+    author = filters.CharFilter()
+    tags = filters.AllValuesMultipleFilter(
         field_name='tags__slug', lookup_expr='contains'
     )
-    is_favorited = NumberFilter(
+    is_favorited = filters.NumberFilter(
         method='filter_is_favorited'
     )
-    is_in_shopping_cart = NumberFilter(
+    is_in_shopping_cart = filters.NumberFilter(
         method='filter_is_in_shopping_cart'
     )
 
