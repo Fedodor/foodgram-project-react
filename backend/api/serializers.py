@@ -238,7 +238,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientPostSerializer(
+    ingredients = RecipeIngredientGetSerializer(
         many=True, required=True, source='ingredients_recipe'
     )
     tags = serializers.PrimaryKeyRelatedField(
@@ -294,7 +294,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
-        ingredients_data = validated_data.pop('ingredients_recipe')
+        ingredients_data = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         validated_data['author'] = self.context['request'].user
         recipe = super().create(validated_data)
@@ -306,7 +306,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         tags_data = validated_data.pop('tags')
         instance.tags.clear()
         instance.tags.set(tags_data)
-        ingredients_data = validated_data.pop('ingredients_recipe')
+        ingredients_data = validated_data.pop('ingredients')
         ingredients_recipe = instance.ingredients_recipe.all()
         ingredients_recipe.delete()
         self.create_ingredients_amounts(
