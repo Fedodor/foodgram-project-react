@@ -1,4 +1,3 @@
-from django.db.models import F
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import exceptions, serializers
@@ -211,7 +210,9 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
-    ingredients = serializers.SerializerMethodField()
+    ingredients = RecipeIngredientGetSerializer(
+        many=True, required=True, source='ingredients_recipe'
+    )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     image = Base64ImageField()
@@ -222,14 +223,6 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             'id', 'tags', 'author', 'ingredients', 'name', 'text',
             'cooking_time', 'image', 'is_favorited', 'is_in_shopping_cart'
         )
-
-    def get_ingredients(self, recipe):
-        ingredients = recipe.ingredients.values(
-            'id', 'name', 'measurement_unit', amount=F(
-                'ingredients_recipe__amount'
-            )
-        )
-        return ingredients
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
@@ -245,8 +238,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientGetSerializer(
-        many=True, required=True,
+    ingredients = RecipeIngredientPostSerializer(
+        many=True, required=True, source='ingredients_recipe'
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True, required=True
@@ -267,7 +260,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         required_fields = ('tags', 'ingredients')
 
     def validate(self, data):
-        ingredients = data.get('ingredients')
+        ingredients = data.get('ingredients_recipe')
         if not ingredients:
             raise exceptions.ValidationError(
                 {'ingredients': 'Должен быть хотя бы один ингредиент.'}
