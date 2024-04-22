@@ -238,7 +238,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientPostSerializer(
+    ingredients = RecipeIngredientGetSerializer(
         many=True, required=True, source='ingredients_recipe'
     )
     tags = serializers.PrimaryKeyRelatedField(
@@ -260,7 +260,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         required_fields = ('tags', 'ingredients')
 
     def validate(self, data):
-        ingredients_data = data.get('ingredients_recipe')
+        ingredients_data = data.get('ingredients')
         if not ingredients_data:
             raise exceptions.ValidationError(
                 {'ingredients': 'Должен быть хотя бы один ингредиент.'}
