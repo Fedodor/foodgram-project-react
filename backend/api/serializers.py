@@ -211,7 +211,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
     ingredients = RecipeIngredientGetSerializer(
-        many=True, required=True, source='ingredients_recipe'
+        many=True, required=True,
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
@@ -239,7 +239,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class RecipePostSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientPostSerializer(
-        many=True, required=True, source='ingredients_recipe'
+        many=True, required=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True, required=True
@@ -260,22 +260,22 @@ class RecipePostSerializer(serializers.ModelSerializer):
         required_fields = ('tags', 'ingredients')
 
     def validate(self, data):
-        ingredients = data.get('ingredients_recipe')
-        if not ingredients:
+        ingredients_data = data.get('ingredients_recipe')
+        if not ingredients_data:
             raise exceptions.ValidationError(
                 {'ingredients': 'Должен быть хотя бы один ингредиент.'}
             )
-        ingredient_id = [ingredient['id'] for ingredient in ingredients]
+        ingredient_id = [ingredient['id'] for ingredient in ingredients_data]
         if len(ingredient_id) != len(set(ingredient_id)):
             raise exceptions.ValidationError(
                 {'ingredients': 'Ингредиенты не могут повторяться.'}
             )
-        tags = data.get('tags')
-        if not tags:
+        tags_data = data.get('tags')
+        if not tags_data:
             raise exceptions.ValidationError(
                 {'tags': 'Должен быть хотя бы один тег.'}
             )
-        if len(tags) != len(set(tags)):
+        if len(tags_data) != len(set(tags_data)):
             raise exceptions.ValidationError(
                 {'tags': 'Теги не могут повторяться.'}
             )
@@ -295,10 +295,10 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
+        tags_data = validated_data.pop('tags')
         validated_data['author'] = self.context['request'].user
         recipe = super().create(validated_data)
-        recipe.tags.set(tags)
+        recipe.tags.set(tags_data)
         self.create_ingredients_amounts(ingredients_data, recipe)
         return recipe
 
