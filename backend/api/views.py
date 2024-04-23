@@ -40,9 +40,9 @@ class UsersViewSet(UserViewSet):
         methods=('POST', 'DELETE'),
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, **kwargs):
-        author_id = self.kwargs.get('id')
-        author = get_object_or_404(User, id=author_id)
+    def subscribe(self, request, user_id):
+        # author_id = self.kwargs.get('id')
+        author = get_object_or_404(User, pk=user_id)
         author.save()
         user = request.user
         serializer = SubcriptionSerializer(

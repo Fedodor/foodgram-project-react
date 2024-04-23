@@ -4,6 +4,7 @@ from rest_framework import exceptions, serializers
 from rest_framework.validators import UniqueValidator
 
 from .fields import Base64ImageField
+from .validators import validate_username
 from core.enums import Length
 from recipes.models import (
     Favorite, Ingredient, Recipe, RecipeIngredient, Tag, ShoppingCart
@@ -46,7 +47,8 @@ class UserCreatesSerializer(UserCreateSerializer):
     username = serializers.CharField(
         validators=[
             UniqueValidator(queryset=User.objects.all()),
-            UnicodeUsernameValidator()
+            UnicodeUsernameValidator(),
+            validate_username
         ]
     )
 
@@ -340,7 +342,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe')
 
     def validate(self, data):
-        user = data['user']
+        user = self.context['request'].user
         recipe = data['recipe']
         shopping_cart = user.shopping_cart.filter(
             recipe=recipe
