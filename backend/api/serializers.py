@@ -238,7 +238,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientPostSerializer(
+    ingredients = RecipeIngredientGetSerializer(
         many=True, required=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
