@@ -20,7 +20,7 @@ from .serializers import (
     UserGetSerializer, UserCreatesSerializer,
     FavoriteSerializer, IngredientSerializer,
     TagSerializer, SubcriptionSerializer, ShoppingCartSerializer,
-    # SubscriptionCreateSerializer,
+    SubscriptionCreateSerializer,
     RecipePostSerializer, RecipeGetSerializer
 )
 from core.utils import (
@@ -45,7 +45,7 @@ class UsersViewSet(UserViewSet):
         author = get_object_or_404(User, id=author_id)
         author.save()
         user = request.user
-        serializer = SubcriptionSerializer(
+        serializer = SubscriptionCreateSerializer(
             author,
             data=request.data,
             context={'request': request}
