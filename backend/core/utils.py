@@ -20,7 +20,10 @@ def create_object(request, pk, model_serializer):
             status=status.HTTP_400_BAD_REQUEST
         )
     serializer = model_serializer(
-        data={'recipe': pk},
+        data={
+            'recipe': pk,
+            'user': request.user.id
+        },
         context={'request': request}
     )
     serializer.is_valid(raise_exception=True)
