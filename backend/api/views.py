@@ -46,8 +46,10 @@ class UsersViewSet(UserViewSet):
         author.save()
         user = request.user
         serializer = SubscriptionCreateSerializer(
-            author,
-            data=request.data,
+            data={
+                'user': user.id,
+                'author': author.id
+            },
             context={'request': request}
         )
         if request.method == 'POST':

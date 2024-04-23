@@ -147,9 +147,6 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
                 )
         return data
 
-    def create(self, validated_data):
-        return Subscription.objects.create(**validated_data)
-
     def to_representation(self, instance):
         request = self.context.get('request')
         return SubcriptionSerializer(
