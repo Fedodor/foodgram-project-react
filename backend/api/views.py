@@ -23,7 +23,9 @@ from .serializers import (
     # SubscriptionCreateSerializer,
     RecipePostSerializer, RecipeGetSerializer
 )
-from core.utils import create_list_of_shopping_cart, delete, post
+from core.utils import (
+    create_list_of_shopping_cart, create_object, delete_object
+)
 from recipes.models import Favorite, Ingredient, Recipe, Tag, ShoppingCart
 from users.models import User, Subscription
 
@@ -50,12 +52,10 @@ class UsersViewSet(UserViewSet):
         )
         if request.method == 'POST':
             serializer.is_valid(raise_exception=True)
-            # serializer.save(user=user)
-            Subscription.objects.create(user=user, author=author)
+            serializer.save()
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED)
-        serializer.is_valid(raise_exception=True)
         subscription = get_object_or_404(
             Subscription,
             user=user,
@@ -138,8 +138,8 @@ class RecipeViewSet(ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         if request.method == 'POST':
-            return post(request, pk, ShoppingCartSerializer)
-        return delete(ShoppingCart, request, pk, ShoppingCartSerializer)
+            return create_object(request, pk, ShoppingCartSerializer)
+        return delete_object(ShoppingCart, request, pk)
 
     @action(
         detail=True,
@@ -148,8 +148,8 @@ class RecipeViewSet(ModelViewSet):
     )
     def favorite(self, request, pk=None):
         if request.method == 'POST':
-            return post(request, pk, FavoriteSerializer)
-        return delete(Favorite, request, pk, FavoriteSerializer)
+            return create_object(request, pk, FavoriteSerializer)
+        return delete_object(Favorite, request, pk)
 
     @action(
         detail=False,

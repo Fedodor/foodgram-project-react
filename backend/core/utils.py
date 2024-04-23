@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.db.models import Sum
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -11,7 +12,8 @@ RESPONSE_RECIPE_POST_ERROR_MESSAGE = 'Ошибка. Рецепт уже был �
 RESPONSE_RECIPE_DELETE_ERROR_MESSAGE = 'Ошибка. Рецепт уже был удалён.'
 
 
-def post(request, pk, model_serializer):
+def create_object(request, pk, model_serializer):
+
     if not Recipe.objects.filter(id=pk).exists():
         return Response(
             {'errors': RESPONSE_RECIPE_DELETE_ERROR_MESSAGE},
@@ -22,19 +24,16 @@ def post(request, pk, model_serializer):
         context={'request': request}
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save(user=request.user)
+    serializer.save()
     return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
-def delete(model, request, pk, model_serializer):
-    serializer = model_serializer(
-        data={'recipe': pk},
-        context={'request': request}
+def delete_object(model, request, pk):
+    objects = model.objects.filter(
+        user=request.user,
+        recipe=get_object_or_404(Recipe, pk=pk),
     )
-    serializer.is_valid(raise_exception=True)
-    model.objects.get(
-        user=request.user, recipe=serializer.validated_data['recipe']
-    ).delete()
+    objects.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 

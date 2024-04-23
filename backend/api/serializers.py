@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import exceptions, serializers
 from rest_framework.validators import UniqueValidator
@@ -44,7 +44,11 @@ class UserCreatesSerializer(UserCreateSerializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())])
     username = serializers.CharField(
-        validators=[UniqueValidator(queryset=User.objects.all())])
+        validators=[
+            UniqueValidator(queryset=User.objects.all()),
+            UnicodeUsernameValidator()
+        ]
+    )
 
     class Meta:
         model = User
@@ -111,10 +115,6 @@ class SubcriptionSerializer(UserGetSerializer):
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
-    author = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all()
-    )
 
     class Meta:
         model = Subscription
@@ -182,21 +182,6 @@ class RecipeIngredientGetSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
-    def validate_id(self, id):
-        set_of_ingredients = set()
-        if not Ingredient.objects.filter(id=id).exists():
-            raise serializers.ValidationError(
-                'Указанного Ингредиента не существует')
-        ingredient = get_object_or_404(
-            Ingredient.objects.all(), id=id
-        )
-        if ingredient in set_of_ingredients:
-            raise exceptions.ValidationError(
-                {'ingredients': 'Ингредиенты не могут повторяться.'}
-            )
-        set_of_ingredients.add(ingredient)
-        return id
-
     def to_internal_value(self, data):
         if isinstance(data, dict):
             ingredient_id = data.get('id')
@@ -226,7 +211,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
-        return user.is_authenticated and user.favorites_user.filter(
+        return user.is_authenticated and user.favorite_user.filter(
             recipe=obj
         ).exists()
 
@@ -238,8 +223,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientGetSerializer(
-        many=True, required=True, source='ingredients_recipe'
+    ingredients = RecipeIngredientPostSerializer(
+        many=True, required=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True, required=True
@@ -257,7 +242,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'id', 'tags', 'author', 'ingredients',
             'name', 'text', 'cooking_time', 'image',
         )
-        required_fields = ('tags', 'ingredients')
 
     def validate(self, data):
         ingredients_data = data.get('ingredients')
@@ -322,10 +306,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
-    recipe = serializers.PrimaryKeyRelatedField(
-        queryset=Recipe.objects.all()
-    )
 
     class Meta:
         model = Favorite
@@ -334,7 +314,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         recipe = data['recipe']
-        favorite = user.favorites_user.filter(
+        favorite = user.favorite_user.filter(
             recipe=recipe
         ).exists()
         if self.context['request'].method == 'POST' and favorite:
@@ -354,10 +334,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
-    recipe = serializers.PrimaryKeyRelatedField(
-        queryset=Recipe.objects.all()
-    )
 
     class Meta:
         model = ShoppingCart
