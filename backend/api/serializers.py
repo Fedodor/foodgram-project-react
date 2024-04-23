@@ -211,7 +211,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = UserGetSerializer(read_only=True)
     ingredients = RecipeIngredientGetSerializer(
-        many=True, required=True, source='ingredients_recipe'
+        many=True, required=True,
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
@@ -238,8 +238,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientGetSerializer(
-        many=True, required=True, source='ingredients_recipe'
+    ingredients = RecipeIngredientPostSerializer(
+        many=True, required=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True, required=True
