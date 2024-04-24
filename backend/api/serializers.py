@@ -45,7 +45,7 @@ class UserCreatesSerializer(UserCreateSerializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())])
     username = serializers.CharField(
-        max_value=Length.MAX_LENGTH_USERNAME.value,
+        max_length=Length.MAX_LENGTH_USERNAME.value,
         validators=[
             UniqueValidator(queryset=User.objects.all()),
             UnicodeUsernameValidator(),
