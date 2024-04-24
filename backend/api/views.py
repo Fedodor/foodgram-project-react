@@ -42,8 +42,8 @@ class UsersViewSet(UserViewSet):
             return [IsAuthenticated()]
         return super().get_permissions()
 
-    @action(detail=False, methods=['get'], url_path='users/<int:pk>/',
-            url_name='users/<int:pk>/')
+    @action(detail=False, methods=['get'], url_path='/<int:pk>/',
+            url_name='users')
     def get(self, request, *args, **kwargs):
         queryset = User.objects.prefetch_related('recipes')
         return queryset
