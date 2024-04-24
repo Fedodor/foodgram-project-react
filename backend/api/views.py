@@ -5,9 +5,9 @@ from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
-# from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import (
-    IsAuthenticated, SAFE_METHODS
+    IsAuthenticated, SAFE_METHODS, IsAuthenticatedOrReadOnly
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import (
@@ -34,6 +34,11 @@ class UsersViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserGetSerializer
     pagination_class = FoodgramPagination
+
+    def get_permissions(self):
+        if self.action == 'me':
+            return [IsAuthenticated()]
+        return super().get_permissions()
 
     @action(
         detail=True,
@@ -66,22 +71,6 @@ class UsersViewSet(UserViewSet):
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=False,
-        permission_classes=(IsAuthenticated,)
-    )
-    def subscriptions(self, request):
-        queryset = User.objects.filter(
-            subscription__user=request.user
-        )
-        page = self.paginate_queryset(queryset)
-        serializer = SubcriptionSerializer(
-            page,
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
-
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreatesSerializer
@@ -104,6 +93,19 @@ class UsersViewSet(UserViewSet):
                         status=status.HTTP_400_BAD_REQUEST)
 
 
+class SubscriptionListView(ListAPIView):
+    serializer_class = SubcriptionSerializer
+    pagination_class = FoodgramPagination
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        queryset = User.objects.filter(
+            subscription__user=self.request.user
+        )
+
+        return queryset
+
+
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -122,7 +124,7 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.select_related('author')
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    permission_classes = IsAuthorOrReadOnly,
+    permission_classes = IsAuthorOrReadOnly, IsAuthenticatedOrReadOnly
     pagination_class = FoodgramPagination
 
     def perform_create(self, serializer):

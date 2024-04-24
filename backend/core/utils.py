@@ -10,6 +10,9 @@ from recipes.models import Recipe, RecipeIngredient
 
 RESPONSE_RECIPE_POST_ERROR_MESSAGE = 'Ошибка. Рецепт уже был добавлен.'
 RESPONSE_RECIPE_DELETE_ERROR_MESSAGE = 'Ошибка. Рецепт уже был удалён.'
+RESPONSE_NOT_AUTHENTICATED_ERROR_MESSAGE = '''
+Незарегистрированый пользователь не может удалять рецепты из корзины.'
+'''
 
 
 def create_object(request, pk, model_serializer):
@@ -32,8 +35,15 @@ def create_object(request, pk, model_serializer):
 
 
 def delete_object(model, request, pk):
-    objects = model.objects.filter(
-        user=request.user,
+    user = request.user
+    if not user.is_authenticated:
+        return Response(
+            {'errors': RESPONSE_NOT_AUTHENTICATED_ERROR_MESSAGE},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    objects = get_object_or_404(
+        model,
+        user=user,
         recipe=get_object_or_404(Recipe, pk=pk),
     )
     objects.delete()

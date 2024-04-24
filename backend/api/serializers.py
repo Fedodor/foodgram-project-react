@@ -45,6 +45,7 @@ class UserCreatesSerializer(UserCreateSerializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())])
     username = serializers.CharField(
+        max_value=Length.MAX_LENGTH_USERNAME.value,
         validators=[
             UniqueValidator(queryset=User.objects.all()),
             UnicodeUsernameValidator(),
@@ -98,9 +99,9 @@ class SubcriptionSerializer(UserGetSerializer):
             'is_subscribed', 'recipes', 'recipes_count'
         )
 
-    def get_recipes(self, obj):
+    def get_recipes(self, user):
         request = self.context.get('request')
-        queryset = Recipe.objects.filter(author=obj.author)
+        queryset = Recipe.objects.filter(author=user)
         if request and not request.user.is_anonymous:
             recipes_limit = request.query_params.get('recipes_limit')
             if recipes_limit:
@@ -112,8 +113,8 @@ class SubcriptionSerializer(UserGetSerializer):
             queryset, many=True, context=self.context
         ).data
 
-    def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
+    def get_recipes_count(self, user):
+        return Recipe.objects.filter(author=user).count()
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
@@ -211,13 +212,13 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         user = self.context['request'].user
         return user.is_authenticated and user.favorite_user.filter(
-            recipe=obj
+            recipe=obj.id
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
         return user.is_authenticated and user.shopping_cart.filter(
-            recipe=obj
+            recipe=obj.id
         ).exists()
 
 
