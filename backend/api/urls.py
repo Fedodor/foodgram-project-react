@@ -16,6 +16,8 @@ router_v1.register('tags', TagViewSet, basename='tags')
 router_v1.register('recipes', RecipeViewSet, basename='recipes')
 
 urlpatterns = [
+    path('users/<int:pk>/subscribe/', UsersViewSet.as_view(
+        {'get': 'users/<int:pk>/'}), name='user_id'),
     path(
         'users/subscriptions/',
         SubscriptionListView.as_view(),
