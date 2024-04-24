@@ -68,4 +68,4 @@ def create_list_of_shopping_cart(user, request):
         ).annotate(total_qty=Sum('amount'))
     ])
     shopping_list += f'\nПосчитано в Foodgram - {today:%Y}'
-    return '\n'.join(shopping_list)
+    return shopping_list

@@ -35,11 +35,6 @@ class UsersViewSet(UserViewSet):
     serializer_class = UserGetSerializer
     pagination_class = FoodgramPagination
 
-    def get_permissions(self):
-        if self.action == 'me':
-            return [IsAuthenticated()]
-        return super().get_permissions()
-
     @action(
         detail=True,
         methods=('POST', 'DELETE'),
@@ -165,8 +160,6 @@ class RecipeViewSet(ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         filename = f'{user.username}_shopping_list.txt'
         shopping_list = create_list_of_shopping_cart(user, request)
-        response = HttpResponse(
-            shopping_list, content_type="text.txt; charset=utf-8"
-        )
+        response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
