@@ -37,10 +37,10 @@ class UsersViewSet(UserViewSet):
     serializer_class = UserGetSerializer
     pagination_class = FoodgramPagination
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+    def get_permissions(self):
+        if self.action == 'me':
+            return [IsAuthenticated()]
+        return super().get_permissions()
 
     @action(
         detail=True,
