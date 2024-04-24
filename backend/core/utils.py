@@ -59,13 +59,13 @@ def create_list_of_shopping_cart(user, request):
     shopping_list += '\n'.join([
         f'- {ingredient["ingredients__name"]}'
         f'({ingredient["ingredients__measurement_unit"]})'
-        f' - {ingredient["cart_amount"]}'
+        f' - {ingredient["total_qty"]}'
         for ingredient in RecipeIngredient.objects.filter(
             recipe__shopping_cart__user=request.user
         ).values(
             'ingredients__name',
             'ingredients__measurement_unit'
-        ).annotate(cart_amount=Sum('amount'))
+        ).annotate(total_qty=Sum('amount'))
     ])
     shopping_list += f'\nПосчитано в Foodgram - {today:%Y}'
     return '\n'.join(shopping_list)
