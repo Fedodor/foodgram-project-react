@@ -1,11 +1,9 @@
-from datetime import datetime
-
-from django.db.models import Sum
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 
-from recipes.models import Recipe, RecipeIngredient
+from recipes.models import Recipe
 
 
 RESPONSE_RECIPE_POST_ERROR_MESSAGE = 'Ошибка. Рецепт уже был добавлен.'
@@ -50,22 +48,16 @@ def delete_object(model, request, pk):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-def create_list_of_shopping_cart(user, request):
-    today = datetime.today()
-    shopping_list = (
-        f'Список покупок пользователя: {user.get_full_name()}\n\n'
-        f'Дата: {today:%Y-%m-%d}\n\n'
+def create_list_of_shopping_cart(ingredients):
+    shopping_list = []
+    for ingredient in ingredients:
+        name = ingredient['ingredient__name']
+        amount = ingredient['ingredient__measurement_unit']
+        measurement_unit = ingredient['total_qty']
+        shopping_list.append(f'{name}: {amount} {measurement_unit}')
+    content = '\n'.join(shopping_list)
+    response = FileResponse(content, content_type='text/plain')
+    response['Content-Disposition'] = (
+        'attachment; filename="shopping_cart.txt"'
     )
-    shopping_list += '\n'.join([
-        f'- {ingredient["ingredients__name"]}'
-        f'({ingredient["ingredients__measurement_unit"]})'
-        f' - {ingredient["total_qty"]}'
-        for ingredient in RecipeIngredient.objects.filter(
-            recipe__shopping_cart__user=request.user
-        ).values(
-            'ingredients__name',
-            'ingredients__measurement_unit'
-        ).annotate(total_qty=Sum('amount'))
-    ])
-    shopping_list += f'\nПосчитано в Foodgram - {today:%Y}'
-    return shopping_list
+    return response

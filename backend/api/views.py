@@ -1,4 +1,4 @@
-from django.http.response import HttpResponse
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.serializers import SetPasswordSerializer
@@ -26,7 +26,9 @@ from .serializers import (
 from core.utils import (
     create_list_of_shopping_cart, create_object, delete_object
 )
-from recipes.models import Favorite, Ingredient, Recipe, Tag, ShoppingCart
+from recipes.models import (
+    Favorite, Ingredient, Recipe, Tag, ShoppingCart, RecipeIngredient
+)
 from users.models import User, Subscription
 
 
@@ -155,11 +157,12 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        user = self.request.user
-        if not user.shopping_cart.exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        filename = f'{user.username}_shopping_list.txt'
-        shopping_list = create_list_of_shopping_cart(user, request)
-        response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename={filename}'
-        return response
+        ingredients = RecipeIngredient.objects.filter(
+            recipe__shopping_cart__user=request.user
+        ).values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(
+            total_qty=Sum('amount')
+        )
+
+        return create_list_of_shopping_cart(ingredients)
